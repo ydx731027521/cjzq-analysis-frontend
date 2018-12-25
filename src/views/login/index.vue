@@ -10,13 +10,17 @@
                 <div class="icon">
                     <i class="iconfont icon-yonghu-tianchong"></i>
                 </div>
-                <input v-model="username" placeholder="用户名">
+                <div class="input-box">
+                  <input v-model="username" placeholder="用户名">
+                </div>
             </div>
             <div class="pwd">
                 <div class="icon">
                     <i class="iconfont icon-mima"></i>
                 </div>
-                <input v-model="password" placeholder="密码" type="password" @keyup.enter="handleEnter">
+                <div class="input-box">
+                  <input v-model="password" placeholder="密码" type="password" @keyup.enter="handleEnter">
+                </div>
             </div>
             <div class="btn" @click="handleLogin">
                 <span class="text">登录</span>
@@ -154,15 +158,25 @@
                       }
                   }
   
-                  input{
+                  .input-box{
                       float: right;
                       width: 90%;
                       outline: none;
-                      border: 0;
-                      line-height: 40px;
+                      padding: 0;
+                      height: 40px;
                       background: rgba(45,45,45,.15);
-                      color: #fff;
-                      text-indent: 5px;
+                      
+                      
+                      input{
+                        width:100%;
+                        border: 0;
+                        text-indent: 5px;
+                        line-height: 40px;
+                        height: 40px;
+                        background: transparent;
+                        color: #fff;
+                        border-radius: 0 5px 5px 0;
+                      }
                   }
   
                   input::-webkit-input-placeholder {

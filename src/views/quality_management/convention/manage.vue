@@ -483,16 +483,13 @@
           let {data} = res
           if (res.status === 200 && res.data.status === 0) {
             util.success(data.message)
+            this._search(this.searchData)
           }else{
             util.error(data.message)
           }
         })
       },
       handleShow(row,index){
-        // let obj = {
-        //   ...this.searchData,
-        //   id:row.qcBatchId
-        // }
         let {qcBatchId} = row
         this.$router.push({name:'批次详情',params:{id:qcBatchId}})
       },
@@ -575,7 +572,6 @@
         let {qcBatchId} = this.deleteRow
         this.deleteDialogVisible = false
         this._delete(qcBatchId)
-        this._search(this.searchData)
       }
     },
     computed:{
