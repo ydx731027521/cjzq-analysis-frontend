@@ -458,7 +458,8 @@ export default {
       checkDateValue:[],
       checkBeginDate:'',
       checkEndDateL:'',
-      isInsert:false
+      isInsert:false,
+      isDelete:{}
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -830,6 +831,14 @@ export default {
     handleStatusChange(val){
       this.spotCheckStatusValue = val
       this.spotCheckStatusId = statusTransToNum(this.spotCheckStatusValue)
+    },
+    handleDelete(row){
+      this.deleteDialogVisible = true
+      this.isDelete = row
+    },
+    handleConfirmDelete(){
+      let {qcBatchId} = this.isDelete
+      this._delete(qcBatchId)
     }
   },
   computed:{

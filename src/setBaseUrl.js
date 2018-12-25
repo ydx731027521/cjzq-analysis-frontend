@@ -1,8 +1,8 @@
 let baseUrl = "";
 switch (process.env.NODE_ENV) {
   case 'development':
-    baseUrl = "http://10.246.9.2:9000"
-    // baseUrl = "http://10.246.164.2:9000"
+    // baseUrl = "http://10.246.9.2:9000"
+    baseUrl = "http://10.246.164.2:9000"
     // baseUrl = "http://10.246.9.67:9000"
     // baseUrl = "http://localhost:8080"
     break
