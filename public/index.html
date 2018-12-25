@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <link rel="stylesheet" href="http://at.alicdn.com/t/font_849088_oq1nvj25yg9.css">
+    <% for (var i in htmlWebpackPlugin.options.cdn.css) { %>
+      <link href="<%= htmlWebpackPlugin.options.cdn.css[i] %>" rel="stylesheet">
+    <% } %>
+    <title>经纪业务合规质检系统</title>
+    <script>
+      // 同步sessionStorage
+    	if (!sessionStorage.length) {
+        localStorage.setItem('getSessionStorage', Date.now());
+      };
+
+      window.addEventListener('storage', function(event) {
+        if (event.key == 'getSessionStorage') {
+          localStorage.setItem('sessionStorage', JSON.stringify(sessionStorage));
+          localStorage.removeItem('sessionStorage');
+
+        } else if (event.key == 'sessionStorage' && !sessionStorage.length) {
+          var data = JSON.parse(event.newValue),
+              value;
+
+          for (key in data) {
+            sessionStorage.setItem(key, data[key]);
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but demo doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+    <!-- CDN 文件 -->
+    <% for (var i in htmlWebpackPlugin.options.cdn.js) { %>
+      <script src="<%= htmlWebpackPlugin.options.cdn.js[i] %>"></script>
+    <% } %>
+  </body>
+</html>

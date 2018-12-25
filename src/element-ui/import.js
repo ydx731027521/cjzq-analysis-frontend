@@ -1,0 +1,75 @@
+import Vue from 'vue';
+import {
+  Pagination,
+  Dialog,
+  Menu,
+  Submenu,
+  MenuItem,
+  MenuItemGroup,
+  Input,
+  Button,
+  Table,
+  TableColumn,
+  DatePicker,
+  Tooltip,
+  Breadcrumb,
+  BreadcrumbItem,
+  Tabs,
+  TabPane,
+  Tag,
+  Icon,
+  Row,
+  Col,
+  Collapse,
+  CollapseItem,
+  Container,
+  Header,
+  Aside,
+  Main,
+  Footer,
+  Loading,
+  Message,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
+  Scrollbar,
+  Select,
+  Option
+} from 'element-ui';
+
+
+Vue.use(Pagination);
+Vue.use(Scrollbar);
+Vue.use(Option);
+Vue.use(Select);
+Vue.use(Dropdown);
+Vue.use(DropdownMenu);
+Vue.use(DropdownItem);
+Vue.use(Dialog);
+Vue.use(Menu);
+Vue.use(Submenu);
+Vue.use(MenuItem);
+Vue.use(MenuItemGroup);
+Vue.use(Input);
+Vue.use(Button);
+Vue.use(Table);
+Vue.use(TableColumn);
+Vue.use(Tooltip);
+Vue.use(DatePicker);
+Vue.use(Breadcrumb);
+Vue.use(BreadcrumbItem);
+Vue.use(Tabs);
+Vue.use(TabPane);
+Vue.use(Tag);
+Vue.use(Row);
+Vue.use(Col);
+Vue.use(Collapse);
+Vue.use(CollapseItem);
+Vue.use(Icon);
+Vue.use(Header);
+Vue.use(Aside);
+Vue.use(Main);
+Vue.use(Footer);
+Vue.use(Loading);
+Vue.use(Message);
+Vue.use(Container);
