@@ -45,6 +45,7 @@
       title="编辑"
       :visible.sync="dialogVisible"
       width="40%"
+      :close-on-click-modal=false
       :before-close="handleClose">
       <div class="birth-box">
         <div class="title">生日:</div>

@@ -70,7 +70,7 @@
             <div class="remark">
               <div class="remark-left">
                 <p>
-                  <span class="red" v-if="effectFlag === '待确认'">　　*</span>
+                  <span class="red" v-if="effectFlag === '待确认'">*</span>
                   <span>备注：</span>
                 </p>
               </div>
@@ -168,11 +168,13 @@
         </div>
         <!-- 要件列表单项删除弹窗 -->
         <el-dialog
+                :close-on-press-escape=false
+                :close-on-click-modal=false
                 title="提醒"
                 :visible.sync="deleteDialogVisible"
                 append-to-body
                 width="30%">
-            <span>是否删除？</span>
+            <span>是否确认删除配置？</span>
             <span slot="footer" class="dialog-footer">
               <el-button @click="handleDeleteCancel">取 消</el-button>
               <el-button type="primary" @click="handleDeleteConfirm">确 定</el-button>
@@ -181,11 +183,13 @@
         <div class="btn-box">
             <el-button type="primary" plain @click="handleReturn">返回</el-button>
             <el-button type="primary" v-if="effectFlag === '待审核'&&isPassShow" @click="confirmDialogVisible = true">审核通过</el-button>
-            <el-button type="primary" v-if="effectFlag === '待确认'&&isPassShow" @click="submitDialogVisible = true">提交</el-button>
+            <el-button type="primary" v-if="effectFlag === '待确认'&&isPassShow" @click="handleSubmitShow">提交</el-button>
             <el-button type="danger" @click="essantialDeleteDialogVisible = true" v-if="effectFlag === '待确认'||effectFlag === '待审核'">删除</el-button>
         </div>
         <!-- 确认删除弹窗 -->
         <el-dialog
+                :close-on-press-escape=false
+                :close-on-click-modal=false
                 title="提示"
                 :visible.sync="essantialDeleteDialogVisible"
                 append-to-body
@@ -198,6 +202,8 @@
         </el-dialog>
         <!-- 确定提交弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 title="提示"
                 :visible.sync="submitDialogVisible"
                 append-to-body
@@ -210,6 +216,8 @@
         </el-dialog>
         <!-- 详情要件新增弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 title="新增要件"
                 :visible.sync="insertDialogVisible"
                 append-to-body
@@ -323,6 +331,8 @@
         </el-dialog>
         <!-- 完成弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 title="提醒"
                 :visible.sync="confirmDialogVisible"
                 append-to-body
@@ -402,14 +412,14 @@
         }
       }
     },
-    beforeRouteLeave(to, from, next) {
-      if (to.path == "/essantial/standard") {
-        to.meta.keepAlive = true;
-      } else {
-        to.meta.keepAlive = false;
-      }
-      next();
-    },
+    // beforeRouteLeave(to, from, next) {
+    //   if (to.path == "/essantial/standard") {
+    //     to.meta.keepAlive = true;
+    //   } else {
+    //     to.meta.keepAlive = false;
+    //   }
+    //   next();
+    // },
     mounted(){
       if(!this.$route.params){
         this.$router.push('/essantial/standard')
@@ -472,7 +482,7 @@
       //删除要件
       _delete(){
         this.$http.get(STANDARD_CONFIG_DETAIL_DELETE,{params:{
-            qcStandardId:this.id
+          qcStandardId:this.id
         }}).then(res=>{
           if (res.status === 200 && res.data.status ==0) {
             let {data} = res
@@ -563,6 +573,8 @@
           if(res.status === 200 && res.data.status === 0){
               util.success(res.data.message)
               this.$router.push('/essantial/standard')
+          }else{
+            util.error(res.data.message)
           }
         }).catch(err=>{
           util.err()
@@ -608,7 +620,6 @@
         }
       },
       _submit(){
-        if(this._check()){
           let list = {}
           list.qcStandardId = this.id,
           list.beginDate = this.date
@@ -632,7 +643,6 @@
               util.error(data.message)
             }
           })
-        }
       },
       handleEdit(row,index){
         this.inputValue = row.orderFilter
@@ -655,7 +665,7 @@
           console.log(this.showEdit)
       },
       handleEditCancle(row,index){
-        row.condition = this.inputValue
+        row.orderFilter = this.inputValue
         this.inputValue = ''
         this.showEdit = []
       },
@@ -719,8 +729,8 @@
         this.qcName = qcNameValue
       },
       handleSubmit(){
-        this._submit()
-        this.submitDialogVisible = false
+          this._submit()
+          this.submitDialogVisible = false
       },
       handleConfirm(){
         this.confirmDialogVisible = false
@@ -739,6 +749,11 @@
       handleSearch(){
         this.i_currentPage =1
         this._getInsertList()
+      },
+      handleSubmitShow(){
+        if(this._check()){
+          this.submitDialogVisible = true
+        }
       }
     },
     computed:{

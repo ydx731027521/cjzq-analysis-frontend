@@ -1,3 +1,4 @@
+<script src="../../../tools/transform.js"></script>
 <template>
     <div class="recheck-record">
         <div class="search-box">
@@ -55,9 +56,9 @@
                     <span>复检结果：</span>
                 </div>
                 <div class="item-right">
-                    <el-select v-model="finalResTypeKey" size="small" @change="handleFinalResChange">
+                    <el-select v-model="qcStatusValue" size="small" @change="handleQcStatusChange">
                         <el-option
-                                v-for="item in finalResType"
+                                v-for="item in qcStatus"
                                 :key="item.key"
                                 :value="item.value"
                         >
@@ -86,22 +87,13 @@
                 <el-date-picker
                         v-model="dateValue"
                         type="daterange"
+                        value-format="yyyyMMdd"
                         range-separator="至"
                         start-placeholder="开始日期"
                         end-placeholder="结束日期"
                         size="small">
                 </el-date-picker>
             </div>
-        </div>
-        <div class="opt">
-            <el-button type="primary" plain @click="handleInsert">
-                <i class="el-icon-plus"></i>
-                新增
-            </el-button>
-            <el-button type="primary" plain @click="handleInsert">
-                <i class="el-icon-close"></i>
-                删除
-            </el-button>
         </div>
         <div class="recheck-record-table">
             <el-table
@@ -226,6 +218,7 @@
   import Pagination from 'components/common/Pagination'
   import util from 'tools/util'
   import URL from 'api/url.js'
+  import {qcStatusTransToNum} from 'tools/transform'
   let {SPOT_CHECK_CONVENTION_LIST, RECHECK_RECORD_RECHECKSTATUS,RECHECK_RECORD_DELETE} = URL
   export default {
     name:'recheckRecord',
@@ -245,7 +238,6 @@
         businessTypeValue:'',
         secondClassValue:'',
         thirdClassValue:'',
-        finalResTypeValue:'',
         businessTypeId:'',
         secondClassId:'',
         thirdClassId:'',
@@ -254,12 +246,13 @@
         businessType:[],
         secondClass:[],
         thirdClass:[],
-        finalResTypeKey:'所有',
+        qcStatusValue:'所有',
         tableData:[],
         batchStartTime:'',
         batchEndTime:'',
         origQcBatchIdValue:'',
-        finalResType:[
+        qcStatusKey:null,
+        qcStatus:[
           {
             "key": "",
             "value": "所有"
@@ -272,21 +265,25 @@
       next();
     },
     mounted(){
+      this.businessTypeValue = "所有"
+      this.secondClassValue = "所有"
+      this.thirdClassValue = "所有"
       util.getBusin(this,'businessType','1',true)
-      this._getFinalResultType()
+      util.getBatchInfo(this,'qcStatus')
+      this._getList(this.params)
 
       let queryData = this.$route.params
       let arr = Object.keys(queryData)
-      if(arr.length != 0){
-        delete queryData.ids
-        this._getList(queryData)
-      }else{
-        this.businessTypeValue = '所有'
-        this.secondClassValue = '所有'
-        this.thirdClassValue = '所有'
-        this.spotCheckValue = '所有'
-        this._getList(this.params)
-      }
+      // if(arr.length != 0){
+      //   delete queryData.ids
+      //   this._getList(queryData)
+      // }else{
+      //   this.businessTypeValue = '所有'
+      //   this.secondClassValue = '所有'
+      //   this.thirdClassValue = '所有'
+      //   this.spotCheckValue = '所有'
+      //   this._getList(this.params)
+      // }
 
     },
     methods:{
@@ -305,11 +302,11 @@
           console.log(err)
         })
       },
-      _getFinalResultType(){
+      _getQcStatus(){
         this.$http.get(RECHECK_RECORD_RECHECKSTATUS).then(res => {
           if (res.status === 200 && res.data.status === 0) {
             let { data } = res.data
-            this.finalResType = this.finalResType.concat(data)
+            this.qcStatus = this.qcStatus.concat(data)
           }
         }).catch(err => {
           util.error('服务器错误，请稍后再试')
@@ -335,23 +332,24 @@
       handleChangeCurrentPageSize(val){
         this.currentPageSize = val;
         this.currentPage = 1
+        this._getList(this.params)
         util.wrapToTop(this)
       },
       handleChangeCurrentPage(val){
         this.currentPage = val;
+        this._getList(this.params)
         util.wrapToTop(this)
       },
       handleInsert(){},
       handleShowDetail(row){
         let {originalQcBatchId} = row
-        this.$router.push({name:'批次详情',params:{
+        this.$router.push({name:'批次管理详情',params:{
             id:originalQcBatchId
           }})
       },
       handleShowResult(row){
         let {originalQcBatchId,qcBatchId} = row
-        let obj = {...this.params,ids:{originalQcBatchId,qcBatchId}}
-        this.$router.push({name:'复检详情',query:obj})
+        this.$router.push({name:'复检详情',params:{qcBatchId,originalQcBatchId}})
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -369,8 +367,10 @@
         this.currentPage = 1
         this._getList(this.params)
       },
-      handleFinalResChange(val){
-
+      handleQcStatusChange(val){
+        this.qcStatusValue = val
+        let qcStatusKey = qcStatusTransToNum(val)
+        this.qcStatusKey = qcStatusKey
       },
       handleDelete(row){
         let {qcBatchId} = row
@@ -396,11 +396,11 @@
           currentPage:this.currentPage,
           pageSize:this.currentPageSize,
           businTypeId,
-          batchType:'3',
           qcBatchId:this.qcBatchIdValue.trim(),
-          batchStartTime:this.checkBeginDate,
-          batchEndTime:this.checkEndDate,
+          batchStartTime:this.batchStartTime,
+          batchEndTime:this.batchEndTime,
           originalQcBatchId:this.origQcBatchIdValue.trim(),
+          qcStatus:this.qcStatusKey
         }
       }
     },
@@ -481,15 +481,6 @@
             }
         }
 
-        .opt{
-            text-align: left;
-            padding: 0 10px;
-            margin-top: 20px;
-            background: #fff;
-            overflow: hidden;
-            padding: 10px 10px 0;
-        }
-
         .recheck-record-table{
             padding: 1%;
             margin: 0 auto;
@@ -529,6 +520,10 @@
 
             .text{
                 text-decoration: underline;
+            }
+
+            .bold{
+                font-weight: 800;
             }
         }
     }

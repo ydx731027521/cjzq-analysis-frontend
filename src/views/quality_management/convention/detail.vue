@@ -66,10 +66,6 @@
                     <span>{{pageData.batchType}}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-title">批次状态：</span>
-                    <span>{{pageData.qcStatus}}</span>
-                </div>
-                <div class="info-item">
                     <span class="info-title">创建人：</span>
                     <span>{{pageData.creator}}</span>
                 </div>
@@ -77,12 +73,20 @@
                     <span class="info-title">创建时间：</span>
                     <span>{{pageData.creatTime}}</span>
                 </div>
-                <div class="batch-time">
+                <div class="info-item">
                     <span class="info-title">批次质检时间：</span>
                     <template v-if="pageData.batchStartTime && pageData.batchEndTime">
                         <span>{{pageData.batchStartTime}}</span>
                         <span> ~ </span>
                         <span>{{pageData.batchEndTime}}</span>
+                    </template>
+                </div>
+                <div class="info-item">
+                    <span class="info-title">订单时间范围：</span>
+                    <template v-if="pageData.startDate && pageData.endDate">
+                        <span>{{pageData.startDate}}</span>
+                        <span> ~ </span>
+                        <span>{{pageData.endDate}}</span>
                     </template>
                 </div>
             </div>
@@ -221,7 +225,7 @@
   import baseUrl from '../../../setBaseUrl'
   let {CONVENTION_BATCH_DETAIL,DEFECTIVE_DETAIL_STATIC_LIST,DEFECTIVE_DETAIL_ALL_FLOAT_LIST,DEFECTIVE_EXCEL_DETAIL_EXPORT,CONVENTION_BATCH_DETAIL_LIST} = URL
   export default {
-    name:'conventionDetail',
+    name:'batchDetail',
     components:{TableAll,Pagination},
     data(){
       return {

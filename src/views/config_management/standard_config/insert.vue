@@ -150,6 +150,8 @@
 
         <!-- 完成弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 title="提醒"
                 :visible.sync="confirmDialogVisible"
                 append-to-body
@@ -163,10 +165,13 @@
 
         <!-- 新建质检要件弹窗 -->
         <el-dialog
-                title="新建"
+                title="新增要件"
                 :visible.sync="createDialogVisible"
                 width="70%"
                 append-to-body
+                :close-on-click-modal=false
+                :close-on-press-escape=false
+                :show-close=false
                 align="center">
             <!-- <EssantialSearch :selectData='options' :currentPage="c_currentPage" :currentPageSize="c_currentPageSize" @getList="handleChangeData" ref='essantialSearch'></EssantialSearch> -->
             <div style="border: 1px solid #F0F2F7;line-height: 70px;overflow: hidden;margin-bottom: 20px;background: #fff; width: 100%;">
@@ -276,11 +281,13 @@
 
         <!-- 删除弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 title="提醒"
                 :visible.sync="deleteDialogVisible"
                 append-to-body
                 width="30%">
-            <span>是否删除？</span>
+            <span>是否确认删除配置？</span>
             <span slot="footer" class="dialog-footer">
             <el-button @click="handleDeleteCancel">取 消</el-button>
             <el-button type="primary" @click="handleDeleteConfirm">确 定</el-button>
@@ -349,14 +356,14 @@
         dimList:[]
       }
     },
-    beforeRouteLeave(to, from, next) {
-      if (to.path == "/essantial/standard") {
-        to.meta.keepAlive = true;
-      } else {
-        to.meta.keepAlive = false;
-      }
-      next();
-    },
+    // beforeRouteLeave(to, from, next) {
+    //   if (to.path == "/essantial/standard") {
+    //     to.meta.keepAlive = true;
+    //   } else {
+    //     to.meta.keepAlive = false;
+    //   }
+    //   next();
+    // },
     mounted(){
       this.c_markTypeValue = '所有'
       util.getBusin(this,'businessType','1',false)
@@ -489,6 +496,7 @@
         }
       },
       handleEdit(row,index){
+        this.inputValue = row.orderFilter
         this.$set(this.showEdit,index,true)
       },
       handleEditDelete(row,index){
@@ -507,6 +515,7 @@
         this.showEdit = list
       },
       handleEditCancle(row,index){
+        row.orderFilter = this.inputValue
         this.inputValue = ''
         this.showEdit = []
       },
@@ -531,7 +540,9 @@
         this.$router.go(-1)
       },
       handleDone(){
-        this.confirmDialogVisible = true
+        if(this._check()){
+          this.confirmDialogVisible = true
+        }
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -578,7 +589,7 @@
       },
       handleInsertConfirm(){
         this.confirmDialogVisible = false
-        this._check() && this._insertDone()
+        this._insertDone()
       },
       handleInsertCancel(){
         this.confirmDialogVisible = false
@@ -599,6 +610,9 @@
     @import '~style/varible.less';
     .insert-box /deep/ .el-input.el-input--small.el-input--suffix{
         height: 32px !important;
+    }
+    .insert-box /deep/ .el-dialog__close.el-icon.el-icon-close{
+      display: none;
     }
     .insert-box{
         width: 96%;

@@ -105,7 +105,7 @@
         </div>
         <!-- 操作 -->
         <div class="opt">
-            <el-button type="primary" plain @click="handleInsert">
+            <el-button type="primary" plain @click="handleInsert" v-if="isShowOpt">
                 <i class="el-icon-plus"></i>
                 新增人工批次
             </el-button>
@@ -135,7 +135,7 @@
                 <el-table-column
                         label="质检业务"
                         fixed='left'
-                        width="300px"
+                        width="350px"
                         align="center">
                     <template slot-scope="{row}">
                         <span class="bussine" v-if="row.qcStatus==='已完成-成功'||row.qcStatus==='已完成-失败'||row.finalResult==='合格'" @click="handleShow(row)">{{row.bussine}}</span>
@@ -145,7 +145,7 @@
                 <el-table-column
                         prop="orderAmount"
                         label="订单总量"
-                        width="120px"
+                        width="100px"
                         align="center">
                 </el-table-column>
                 <el-table-column
@@ -167,18 +167,26 @@
                         width="100px"
                         align="center">
                     <template slot-scope="{row,$index}">
-                        <span class="qualified" :class="row.finalResult === '合格'?'qualified':'unqualified'">{{row.finalResult}}</span>
+                        <span class="qualified" v-if="row.finalResult === '合格'">{{row.finalResult}}</span>
+                        <span class="unqualified" v-if="row.finalResult === '不合格'">{{row.finalResult}}</span>
+                        <span class="recheck" v-if="row.finalResult === '复检中'">{{row.finalResult}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
                         prop="batchEndTime"
                         label="质检完成时间"
-                        width="200px"
+                        width="120"
                         align="center">
                 </el-table-column>
                 <el-table-column
+                        prop="time"
+                        label="订单时间范围"
+                        width="220"
+                        align="center">
+                </el-table-column>
+                <el-table-column
+                        width="200"
                         label="批次编号"
-                        width="120px"
                         align="center">
                     <template slot-scope="{row}">
                         <el-tooltip :content="row.qcBatchId" placement="top" effect="light">
@@ -187,11 +195,12 @@
                     </template>
                 </el-table-column>
                 <el-table-column
+                        v-if="isShowOpt"
                         label="操作"
                         align="center">
                     <template slot-scope="{row}">
                         <span class="red" v-if="row.qcStatus==='未开始'" @click="handleDelete(row)">删除</span>
-                        <span class="blue" v-if="row.qcStatus==='已完成-失败'" @click="handleDeal(row)">次品处理</span>
+                        <span class="blue" v-if="row.qcStatus==='已完成-失败'" @click="handleDeal(row)">次品详情</span>
                     </template>
                 </el-table-column>
             </el-table>
@@ -207,6 +216,8 @@
         </pagination>
         <!-- 弹窗 -->
         <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
                 @close="handleDialogClose"
                 title="新增人工批次"
                 :visible.sync="dialogVisible"
@@ -288,6 +299,8 @@
         <!-- 提示弹窗 -->
         <div class="delete-box">
             <el-dialog
+                    :close-on-click-modal=false
+                    :close-on-press-escape=false
                     title="提示"
                     :visible.sync="deleteDialogVisible"
                     width="30%">
@@ -351,6 +364,7 @@
         currentPageSize:20,
         magageTableData:[],
         isInsert:false,
+        isShowOpt:false,
         batchType:[
           {
             "key": "",
@@ -371,16 +385,20 @@
             let curDate = (new Date()).getTime();
             let three = 90 * 24 * 3600 * 1000;
             let threeMonths = curDate - three;
-            return time.getTime() > Date.now() || time.getTime() < threeMonths;
+            return time.getTime()+24 * 3600 * 1000 > Date.now() || time.getTime() < threeMonths;
           }
         }
       }
     },
     mounted(){
       util.getBusin(this,'businessType','1','hasAll')
-      util.getBatchInfo(this,'batchType','qcType')
+      util.getBatchInfo(this,'qcType','batchType')
       let queryData = this.$route.params
       let arr = Object.keys(queryData)
+      let {authorityList} = util.getSession()
+      if(authorityList.indexOf('DEFECTIVE_MANAGEMENT')!=-1){
+        this.isShowOpt = true
+      }
       if(arr.length != 0){
         delete queryData.id
         this._initSearchData(queryData)
@@ -408,6 +426,8 @@
             this.total = data.totalNum
             finalResultTrans(data.items)
             statusTrans(data.items)
+            util.batchTimeTrans(data.items)
+            util.orderTime(data.items)
             this.magageTableData = data.items
             this.loading = false
           }else{
@@ -440,9 +460,9 @@
       _i_clear(){
         this.i_titleValue = ''
         this.i_businessTypeValue = '',
-          this.i_firstClassValue = '',
-          this.i_secondClassValue = '',
-          this.i_dateValue = []
+        this.i_secondClassValue = '',
+        this.i_thirdClassValue = ''
+        this.i_dateValue = []
       },
       _insert(){
         if(!this.isInsert){
@@ -471,10 +491,11 @@
               this._i_clear()
               this.dialogVisible = false
               this._getList(this.searchData)
-              this.isInsert = !this.isInsert
+              
             }else{
               util.error(data.message)
             }
+            this.isInsert = !this.isInsert
           })
         }
       },
@@ -491,18 +512,16 @@
       },
       handleShow(row,index){
         let {qcBatchId} = row
-        this.$router.push({name:'批次详情',params:{id:qcBatchId}})
+        this.$router.push({name:'批次管理详情',params:{id:qcBatchId}})
       },
       handleInsert(){
-        // if(!this.i_businessType.length>0){
-        // util.getSeletData(this,'i_businessType')
         util.getBusin(this,'i_businessType','1',false)
-        // }
+
         this.dialogVisible = true
       },
       handleDeal(row){
         let {qcBatchId} = row
-        this.$router.push({name:'次品详情',query:{qcBatchId}})
+        this.$router.push({name:'次品详情',params:{qcBatchId}})
       },
       handleCancel(){
         this.dialogVisible = false
@@ -542,6 +561,7 @@
         util.thirdClassChange(this, this.thirdClassValue, val)
       },
       handleQcSatusChange(val){
+        this.qcStatusValue = val
         let qcStatusKey = finalResultTransToNum(val)
         this.qcStatusKey = qcStatusKey
       },
@@ -706,6 +726,11 @@
 
             .unqualified{
                 color: @color-unqualified;
+                font-weight: 700;
+            }
+
+            .recheck{
+                color: @color-recheck;
                 font-weight: 700;
             }
 

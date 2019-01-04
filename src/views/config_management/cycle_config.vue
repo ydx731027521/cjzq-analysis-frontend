@@ -37,12 +37,12 @@
                 </el-table-column>
                 <el-table-column
                         prop="isCheck"
-                        label="是否质检"
+                        label="质检状态"
                         align="center">
                     <template scope="{row}">
                       <span type="primary" size="small" class="check-opt">
-                        <span v-if="row.isCheck" class="stop">停止</span>
-                        <span v-if="!row.isCheck" class="start">启动</span>
+                        <span v-if="!row.isCheck" class="stop">停止</span>
+                        <span v-if="row.isCheck" class="start">启动</span>
                       </span>
                     </template>
                 </el-table-column>
@@ -60,6 +60,8 @@
         <!-- 修改质检周期弹窗 -->
         <div>
             <el-dialog
+                    :close-on-press-escape=false
+                    :close-on-click-modal=false
                     title="修改质检周期"
                     :visible.sync="dialogVisible"
                     width="50%">
@@ -106,6 +108,8 @@
         <!-- 修改质检周期弹窗 -->
         <div>
             <el-dialog
+                    :close-on-press-escape=false
+                    :close-on-click-modal=false
                     title="提示"
                     :visible.sync="changeDialogVisible"
                     width="30%">

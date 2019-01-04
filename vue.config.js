@@ -90,6 +90,7 @@ module.exports = {
       .set('echarts', resolve('src/echarts'))
       .set('echarts', resolve('node_modules/echarts'))
       .set('src', resolve('src'))
+      .set('router', resolve('src/router'))
 
     config.output.filename('[name].[hash].js').end()
 

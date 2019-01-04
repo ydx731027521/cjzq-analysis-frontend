@@ -14,7 +14,7 @@ import _ from 'lodash'
 
 import util from 'tools/util'
 
-let echarts = require('echarts/lib/echarts')
+let echarts = require('echarts')
 
 require("echarts/lib/chart/line");
 require("echarts/lib/chart/pie");

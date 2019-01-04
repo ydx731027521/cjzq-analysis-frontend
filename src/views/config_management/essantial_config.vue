@@ -2,40 +2,40 @@
     <div class="essential">
         <!-- <EssantialSearch :selectData='options' :currentPage="currentPage" :currentPageSize="currentPageSize" @getList="handleChangeData" ref='essantianSearch'></EssantialSearch> -->
         <div class="essential-box">
-          <div class="essential-select">
-              <span>要件类型:</span>
-              <el-select v-model="markTypeValue" size="small" @change="handleTypeChange">
-                  <el-option
-                          v-for="item in options"
-                          :key="item.id"
-                          :label="item.markTypeName"
-                          :value="item.id">
-                  </el-option>
-              </el-select>
-          </div>
-          <div class="essential-title">
-              <span>要件名称:</span>
-              <el-input
-                      placeholder="请输要件名称"
-                      v-model="qcNameValue"
-                      clearable
-                      size="small"
-                      class="essential-title-input">
-              </el-input>
-          </div>
-          <div class="essential-param">
-            <span>要件参数:</span>
-            <el-input
-                    placeholder="请输要件参数"
-                    v-model="paramValue"
-                    clearable
-                    size="small"
-                    class="essential-title-input">
-            </el-input>
-          </div>
-          <div class="essential-search">
-              <el-button type="primary" size="small" class="essential-search-btn" @click="handleSearch"><i class="el-icon-search"></i></el-button>
-          </div>
+            <div class="essential-select">
+                <span>要件类型:</span>
+                <el-select v-model="markTypeValue" size="small" @change="handleTypeChange">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.id"
+                            :label="item.markTypeName"
+                            :value="item.id">
+                    </el-option>
+                </el-select>
+            </div>
+            <div class="essential-title">
+                <span>要件名称:</span>
+                <el-input
+                        placeholder="请输要件名称"
+                        v-model="qcNameValue"
+                        clearable
+                        size="small"
+                        class="essential-title-input">
+                </el-input>
+            </div>
+            <div class="essential-param">
+                <span>要件参数:</span>
+                <el-input
+                        placeholder="请输要件参数"
+                        v-model="paramValue"
+                        clearable
+                        size="small"
+                        class="essential-title-input">
+                </el-input>
+            </div>
+            <div class="essential-search">
+                <el-button type="primary" size="small" class="essential-search-btn" @click="handleSearch"><i class="el-icon-search"></i></el-button>
+            </div>
         </div>
         <div class="essential-table">
             <el-table
@@ -127,12 +127,12 @@
             currentPage:this.currentPage,
             pageSize:this.currentPageSize
           }}).then(res=>{
-            if (res.status === 200 && res.data.status == 0) {
-              let { data } = res.data
-              this.essentialTableData = data.items
-              this.loading = false
-              this.total = data.totalNum
-            }
+          if (res.status === 200 && res.data.status == 0) {
+            let { data } = res.data
+            this.essentialTableData = data.items
+            this.loading = false
+            this.total = data.totalNum
+          }
         }).catch(err => {
           console.log(err)
         })
@@ -197,7 +197,7 @@
                 box-sizing: border-box;
 
                 .el-select.el-select--small{
-                  flex:1;
+                    flex:1;
                 }
             }
 

@@ -105,7 +105,7 @@
                         prop="bussine"
                         label="业务类型"
                         align="center"
-                        width="300">
+                        width="350">
                 </el-table-column>
                 <el-table-column
                         fixed="left"
@@ -140,8 +140,9 @@
                         width="100"
                         label="复检结果">
                     <template slot-scope="{row}">
-                        <span v-if="row.finalResult == 1" class="unqualified">不合格</span>
-                        <span v-if="row.finalResult == 0" class="qualified">合格</span>
+                        <span class="qualified" v-if="row.finalResult === '合格'">{{row.finalResult}}</span>
+                        <span class="unqualified" v-if="row.finalResult === '不合格'">{{row.finalResult}}</span>
+                        <span class="recheck" v-if="row.finalResult === '复检中'">{{row.finalResult}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -180,6 +181,8 @@
         <!-- 复检次数弹窗 -->
         <div class="delete-box">
             <el-dialog
+                    :close-on-click-modal=false
+                    :close-on-press-escape=false
                     title="复检详情"
                     :visible.sync="recheckDialogVisible"
                     width="70%">
@@ -273,10 +276,15 @@
         finalResTypeKey:'',
         batchStartTime:'',
         batchEndTime:'',
+        isReBatch:false,
         finalResType:[
           {
             "key": "",
             "value": "所有"
+          },
+          {
+            "key": "",
+            "value": "复检中"
           },
         ],
         tableData:[],
@@ -288,7 +296,7 @@
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
       util.getBusin(this,'businessType','1',true)
-      this._getFinalResultType()
+      util.getBatchInfo(this,'finalResType')
       this._getList(this.params)
     },
     beforeRouteLeave(to, from, next) {
@@ -302,21 +310,10 @@
           if (res.status === 200 && res.data.status === 0) {
             let { data } = res.data
             util.formatBussine(data.items,'bussine')
+            finalResultTrans(data.items)
             this.tableData = data.items
             this.total = data.totalNum
             this.loading = false
-          }
-        }).catch(err => {
-          util.error('服务器错误，请稍后再试')
-          console.log(err)
-        })
-      },
-      _getFinalResultType(){
-        this.$http.post(CONVENTION_BATCH_AND_STATUS).then(res => {
-          let { data } = res.data
-          if (res.status === 200 && res.data.status === 0) {
-            this.$lodash.remove(data.qcStatusList,{key:'-1',value:'未完成'})
-            this.finalResType = this.finalResType.concat(data.qcStatusList)
           }
         }).catch(err => {
           util.error('服务器错误，请稍后再试')
@@ -376,6 +373,20 @@
         let {qcBatchId} = row
         this._getDetailList(qcBatchId)
       },
+      handleAddRecheck(row){
+        let {qcBatchId} = row
+        this._addRecheck(qcBatchId)
+      },
+      handleFinalResChange(val){
+        this.finalResTypeValue = val
+        if(val!='复检中'){
+          this.isReBatch = false
+          this.finalResult = ''
+          this.finalResTypeKey = finalResultTransToNum(val)
+        }else{
+          this.isReBatch = true
+        }
+      }
     },
     computed:{
       params(){
@@ -399,7 +410,8 @@
           batchEndTime: this.batchEndTime,
           batchStartTime: this.batchStartTime,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize
+          pageSize: this.currentPageSize,
+          isReBatch: this.isReBatch
         }
       }
     },
@@ -430,9 +442,12 @@
             overflow: hidden;
             position: relative;
             padding: 20px 0;
+            display: flex;
+            flex-direction: row;
+            background: #fff;
+            flex-wrap: wrap;
 
             .recheck-item{
-                float: left;
                 width: 28%;
                 text-align: left;
                 padding-left: 20px;
@@ -502,6 +517,10 @@
                 font-weight: 700;
             }
 
+            .recheck{
+                color: @color-recheck;
+                font-weight: 700;
+            }
 
             .count{
                 text-decoration: underline;

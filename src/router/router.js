@@ -11,6 +11,7 @@ import Version from '../views/version'
 import ConventionManage from '../views/quality_management/convention/manage.vue'
 import ConventionDetail from '../views/quality_management/convention/detail.vue'
 import DefectiveProcess from '../views/quality_management/defective_process/defective.vue'
+import SpecialDefectiveProcess from '../views/quality_management/special_defective_process/index.vue'
 import DefectiveDetail from '../views/quality_management/defective_process/detail.vue'
 import RecheckManage from '../views/quality_management/recheck_manage/index.vue'
 import RecheckRecord from '../views/quality_management/recheck_record/index.vue'
@@ -18,7 +19,10 @@ import RecheckRecordDetail from '../views/quality_management/recheck_record/rech
 import SpotCheck from '../views/spot_check/index.vue'
 import SpotCheckConvention from '../views/spot_check/convention.vue'
 import SpotCheckDetail from '../views/spot_check/detail.vue'
-
+import StatisticalQuery from '../views/statistical_query/index.vue'
+import InspectionAnalysis from '../views/statistical_query/inspection_analysis/index.vue'
+import DefectiveQuery from '../views/statistical_query/defective_query/index.vue'
+import defectiveStatistics from '../views/statistical_query/defective_statistics/index.vue'
 
 // EXAMINE_MANAGE("质检标准审核"),
 // PERIODIC_CONFIGURATION("周期配置"),
@@ -64,8 +68,7 @@ export const constantRouterMap = [
             name: '质检标准配置',
             meta: {
               roles: ['EXAMINE_MANAGE'],
-              icon: 'el-icon-rank',
-              keepAlive: true
+              icon: 'el-icon-rank'
             },
             component: Standard,
           },
@@ -118,7 +121,7 @@ export const constantRouterMap = [
           },
           {
             path: 'conventiondetail/:id',
-            name: '批次详情',
+            name: '批次管理详情',
             meta: {
               roles: ['BATCH_MANAGEMENT']
             },
@@ -135,30 +138,40 @@ export const constantRouterMap = [
             component: DefectiveProcess
           },
           {
+            path: 'specialdefective',
+            name: '特殊次品处理',
+            meta: {
+              roles: ['DEFECTIVE_MANAGEMENT'],
+              icon: 'iconfont icon-teshu',
+              keepAlive: true
+            },
+            component: SpecialDefectiveProcess
+          },
+          {
             path: 'defectivedetail/:qcBatchId',
             name: '次品详情',
             component: DefectiveDetail
           },
-          // {
-          //   path: 'recheckmanage',
-          //   name: '复检管理',
-          //   meta: {
-          //     roles: ['REINSPECTION_MANAGEMENT'],
-          //     icon: 'iconfont icon-chuli',
-          //     keepAlive: true
-          //   },
-          //   component: RecheckManage
-          // },
-          // {
-          //   path: 'recheckrecord',
-          //   name: '复检记录',
-          //   meta: {
-          //     roles: ['DEFECTIVE_MANAGEMENT', 'REINSPECTION_MANAGEMENT'],
-          //     icon: 'iconfont icon-jilu1',
-          //     keepAlive: true
-          //   },
-          //   component: RecheckRecord,
-          // },
+          {
+            path: 'recheckmanage',
+            name: '复检管理',
+            meta: {
+              roles: ['REINSPECTION_MANAGEMENT'],
+              icon: 'iconfont icon-chuli',
+              keepAlive: true
+            },
+            component: RecheckManage
+          },
+          {
+            path: 'recheckrecord',
+            name: '复检记录',
+            meta: {
+              roles: ['DEFECTIVE_MANAGEMENT', 'REINSPECTION_MANAGEMENT'],
+              icon: 'iconfont icon-jilu1',
+              keepAlive: true
+            },
+            component: RecheckRecord,
+          },
           {
             path: 'recheckdetail/:qcBatchId/:originalQcBatchId',
             name: '复检详情',
@@ -197,6 +210,45 @@ export const constantRouterMap = [
             },
             component: SpotCheckConvention
           },
+        ]
+      },
+      {
+        path: 'statisticalquery',
+        name: '统计查询',
+        redirect: '/statisticalquery/analysis',
+        component: StatisticalQuery,
+        meta: {
+          roles: ['BATCH_MANAGEMENT', 'DEFECTIVE_MANAGEMENT', 'REINSPECTION_MANAGEMENT'],
+          name: 'statisticalQuery'
+        },
+        children:[
+          {
+            path: 'analysis',
+            name: '质检分析',
+            meta: {
+              roles: ['SPOTCHECK_MANAGEMENT'],
+              icon: 'iconfont icon-fenxi',
+            },
+            component: InspectionAnalysis
+          },
+          {
+            path: 'defectivequery',
+            name: '次品查询',
+            meta: {
+              roles: ['SPOTCHECK_MANAGEMENT'],
+              icon: 'iconfont icon-chaxun',
+            },
+            component: DefectiveQuery
+          },
+          {
+            path: 'defectivestatistics',
+            name: '次品统计',
+            meta: {
+              roles: ['SPOTCHECK_MANAGEMENT'],
+              icon: 'iconfont icon-tongji',
+            },
+            component: defectiveStatistics
+          }
         ]
       }
     ]

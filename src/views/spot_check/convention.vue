@@ -99,7 +99,7 @@
               </div>
             </div>
             <div class="check-time">
-                <span class="time-title">质检时间：</span>
+                <span class="time-title">抽检时间：</span>
                 <el-date-picker
                     v-model="checkDateValue"
                     size="small"
@@ -128,14 +128,14 @@
         <el-table-column
                 label="序号"
                 type="index"
-                width="50px"
+                width="50"
                 fixed='left'
                 align="center">
         </el-table-column>
         <el-table-column
                 prop="spotType"
                 label="抽检类型"
-                width="150px"
+                width="150"
                 fixed='left'
                 align="center">
         </el-table-column>
@@ -143,26 +143,27 @@
                 prop="qcBatchName"
                 label="批次名称"
                 fixed='left'
-                width="200px"
+                width="200"
                 align="center">
         </el-table-column>
         <el-table-column
                 prop="qcStatus"
                 label="状态"
                 fixed='left'
-                width="150px"
+                width="150"
                 align="center">
                 <template slot-scope="{row}">
                   <span class="unusual" v-if="row.qcStatus=='异常'">异常</span>
                   <span class="bold" v-if="row.qcStatus=='未开始'">未开始</span>
-                  <span class="qualified" v-if="row.qcStatus=='已完成-成功'">已完成-成功</span>
-                  <span class="unqualified" v-if="row.qcStatus=='已完成-失败'">已完成-失败</span>
+                  <span class="bold" v-if="row.qcStatus=='进行中'">进行中</span>
+                  <span class="qualified" v-if="row.qcStatus=='已完成-成功'">合格</span>
+                  <span class="unqualified" v-if="row.qcStatus=='已完成-失败'">不合格</span>
                 </template>
         </el-table-column>
         <el-table-column
-                label="质检业务"
+                label="抽检业务"
                 fixed='left'
-                width="300px"
+                width="300"
                 align="center">
                 <template slot-scope="{row}">
                     <span class="bussine" v-if="row.qcStatus==='已完成-失败'||row.qcStatus==='已完成-成功'" @click="handleShow(row)">{{row.bussine}}</span>
@@ -172,18 +173,24 @@
         <el-table-column
                 prop="creator"
                 label="创建人"
-                width="80px"
+                width="80"
                 align="center">
         </el-table-column>
         <el-table-column
                 prop="createTime"
                 label="创建时间"
-                width="180px"
+                width="180"
+                align="center">
+        </el-table-column>
+        <el-table-column
+                prop="time"
+                label="订单时间范围"
+                width="220"
                 align="center">
         </el-table-column>
         <el-table-column
                 label="批次编号"
-                width="120px"
+                width="220"
                 align="center">
                 <template slot-scope="{row}">
                   <el-tooltip :content="row.qcBatchId" placement="top" effect="light">
@@ -194,7 +201,7 @@
         <el-table-column
                 label="操作"
                 align="center"
-                width="100px">
+                width="100">
           <template slot-scope="{row}">
               <span class="red" v-if="row.batchType==='抽检批次'&&row.qcStatus === '未开始'" @click="handleDelete(row)">删除</span>
               <span class="blue" v-if="row.qcStatus==='已完成-成功'||row.qcStatus==='已完成-失败'" @click="handleDeal(row)">抽检结果</span>
@@ -213,6 +220,8 @@
       </div>
       <div class="insert-dialog">
         <el-dialog
+          :close-on-click-modal=false
+          :close-on-press-escape=false
           :before-close="handleClose"
           title="新增抽检批次"
           :visible.sync="insertDialogVisible"
@@ -372,6 +381,8 @@
         </el-dialog>
       </div>
       <el-dialog
+            :close-on-click-modal=false
+            :close-on-press-escape=false
             title="提醒"
             :visible.sync="deleteDialogVisible"
             append-to-body
@@ -390,7 +401,7 @@ import BusinTypeSearch from 'components/businTpye_search.vue'
 import Pagination from 'components/common/Pagination'
 import util from 'tools/util'
 import URL from 'api/url.js'
-import {statusTransToNum} from 'tools/transform'
+import {qcStatusTransToNum} from 'tools/transform'
 let {SPOT_CHECK_CONVENTION_LIST,SPOT_CHECK_INSERT_QCSTANDARD,SPOT_CHECK_INSERT,SPOT_CHECK_DELETE,SPOT_CHECK_CHECKTYPE,RECHECK_RECORD_RECHECKSTATUS} = URL
 export default {
   name:'spotCheckConvention',
@@ -459,7 +470,7 @@ export default {
       checkBeginDate:'',
       checkEndDateL:'',
       isInsert:false,
-      isDelete:{}
+      isDelete:{},
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -476,7 +487,7 @@ export default {
     this._getList()
     this._getCheckType()
     this._initSpotCheck()
-    this._getSpotCheckStatus()
+    util.getBatchInfo(this,'spotCheckStatus')
   },
   methods:{
     _initSpotCheck(){
@@ -504,23 +515,6 @@ export default {
         this.options = data
       })
     },
-    _getSpotCheckStatus(){
-      this.$http.get(RECHECK_RECORD_RECHECKSTATUS).then(res => {
-        if (res.status === 200 && res.data.status === 0) {
-          let { data } = res.data
-          
-          let arr = data.filter(item=>{
-            if(item.key==0||item.key==2||item.key==3){
-              return item
-            }
-          })
-          this.spotCheckStatus = this.spotCheckStatus.concat(arr)
-        }
-      }).catch(err => {
-        util.error('服务器错误，请稍后再试')
-        console.log(err)
-      })
-    },
     _getList(){
       this.loading = true
       let id = util.getBusinTypeId(this,'')
@@ -539,6 +533,8 @@ export default {
         if(res.status === 200 && res.data.status === 0){
           let {data} = res.data
           util.formatBussine(data.items,'bussine')
+          util.batchTimeTrans(data.items)
+          util.orderTime(data.items)
           this.tableData = data.items
           this.total = data.totalNum
           this.loading = false
@@ -580,12 +576,17 @@ export default {
 
               if(this.i_radio_random === '1'){
                 if(this.i_proportionValue){
-                  if(!proportion){
-                    util.error('比例输入有误，请输入数字')
+                  if(this.i_proportionValue.indexOf('.')!=-1){
+                    util.error('比例输入有误，不能为小数')
                     return false
-                  }else if(proportion>100||proportion<=0){
-                    util.error('比例输入有误，请输入正确的范围')
-                    return false
+                  }else{
+                    if(!proportion&&proportion!=0){
+                      util.error('比例输入有误，请输入数字')
+                      return false
+                    }else if(proportion>30||proportion<1){
+                      util.error('比例输入有误，比例范围为1~30')
+                      return false
+                    }
                   }
                 }else{
                   util.error('请输入比例')
@@ -593,13 +594,18 @@ export default {
                 }
               }else if(this.i_radio_random === '2'){
                 if(this.i_numberValue){
-                  if(!number){
-                    util.error('数量输入有误，请输入数字')
+                  if(this.i_numberValue.indexOf('.')!=-1){
+                    util.error('数量输入有误，不能为小数')
                     return false
-                  }
-                  if(number>1000||number<0){
-                    util.error('输入有误，数量范围为1~1000')
-                    return false
+                  }else{
+                    if(!number&&number!=0){
+                      util.error('数量输入有误，请输入数字')
+                      return false
+                    }
+                    if(number>1000||number<1){
+                      util.error('输入有误，数量范围为1~1000')
+                      return false
+                    }
                   }
                 }else{
                   util.error('请输入数量')
@@ -693,7 +699,7 @@ export default {
           qcBatchName:this.i_insertTitleValue,
           qcStdVersion:version,
           spotType:this.i_radio,
-          orderAmount:Number(this.i_numberValue),
+          spotOrderCount:Number(this.i_numberValue),
           spotProportion:this.i_proportionValue,
           spotOrderIdList:list,
         }).then(res=>{
@@ -830,7 +836,7 @@ export default {
     },
     handleStatusChange(val){
       this.spotCheckStatusValue = val
-      this.spotCheckStatusId = statusTransToNum(this.spotCheckStatusValue)
+      this.spotCheckStatusId = qcStatusTransToNum(this.spotCheckStatusValue)
     },
     handleDelete(row){
       this.deleteDialogVisible = true

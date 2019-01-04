@@ -8,7 +8,7 @@ let { STANDARD_CONFIG_MENU, STANDARD_FIRSTCLASS, STANDARD_SECONDCLASS, CONVENTIO
 
 export default {
   initConstantRouterMap(obj) {
-    // return constantRouterMap = 
+    // return constantRouterMap =
   },
   // 初始化路由
   initRoutes(constantRouterMap, router, store) {
@@ -173,11 +173,13 @@ export default {
     })
   },
   // 获取批次的类型和状态的下拉数据
-  getBatchInfo(obj, batchType, qcType) {
+  getBatchInfo(obj, qcType, batchType) {
     obj.$http.post(CONVENTION_BATCH_AND_STATUS).then(res => {
       if (res.status === 200 && res.data.status == 0) {
         let { data } = res.data
-        obj[batchType] = obj[batchType].concat(data.batchTypeList)
+        if (batchType) {
+          obj[batchType] = obj[batchType].concat(data.batchTypeList)
+        }
         obj[qcType] = obj[qcType].concat(data.qcStatusList)
       }
     }).catch(err => {
@@ -302,13 +304,13 @@ export default {
   },
   //获取业务类型
   /**
-   * @msg: 
+   * @msg:
    * @param {object} obj 组件对象
    * @param {String} dataName 获取数据的数组
    * @param {String} levelId 需要获取数据的下拉框的级别id
    * @param {String} hasAll true or false
    * @param {String} parentId 父级下拉框id，如果为一级下拉框则为空字符串
-   * @return: 
+   * @return:
    */
   getBusin(obj, dataName, levelId, hasAll, parentId) {
     obj[dataName] = hasAll ? [{ businName: '所有' }] : []
@@ -581,5 +583,82 @@ export default {
         }
       ]
     });
+  },
+  // 批次管理质检时间的转换
+  batchTimeTrans(arr) {
+    arr.map(item => {
+      if (item.batchEndTime) {
+        let time = item.batchEndTime
+        time = time.substr(0, time.length - 9)
+        item.batchEndTime = time
+      } else {
+        item.batchEndTime = ''
+      }
+    })
+  },
+  // 批次管理订单时间范围的转换
+  orderTime(arr) {
+    arr.map(item => {
+      if (item.startDate && item.endDate) {
+        let startTime = item.startDate
+        let endTime = item.endDate
+        startTime = startTime.substr(0, startTime.length - 9)
+        endTime = endTime.substr(0, endTime.length - 9)
+        item.time = startTime + ' ~ ' + endTime
+      } else {
+        item.time = ''
+      }
+    })
+  },
+  // 质检分析 柱状图初始化
+  initHistogram(obj, id){
+    let myChart = obj.$echarts.init(document.getElementById(id))
+    myChart.setOption({
+      xAxis: {
+        type: 'category',
+        data: ['代销金融产品销售', '创新金融产品销售', '投顾服务产品销售', '业务办理']
+      },
+      yAxis: [
+        {
+          type: 'value',
+          axisLabel: {
+            show: true,
+            interval: 'auto',
+            formatter: '{value} %'
+          },
+          show: true
+        }
+      ],
+      series: [{
+        data: [2, 8, 6, 5],
+        type: 'bar'
+      }],
+      color:['#ED7D31']
+    })
+  },
+  // 质检分析 折线图初始化
+  initLine(obj, id){
+    let tabsObj = document.getElementsByClassName('tabs')[0]
+    let tabsWidth = tabsObj.clientWidth
+    let lineObj = document.getElementById(id)
+    lineObj.style.width = tabsWidth+'px'
+
+    let myChart = obj.$echarts.init(lineObj)
+    myChart.setOption({
+      title: {
+        text: '质检结果跟踪'
+      },
+      xAxis: {
+        type: 'category',
+        data: ['2018-1-1', '2018-1-2', '2018-1-3', '2018-1-4', '2018-1-5', '2018-1-6', '2018-1-7']
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        data: [1, 4, 5, 1, 0, 3, 2],
+        type: 'line'
+      }]
+    })
   }
 }

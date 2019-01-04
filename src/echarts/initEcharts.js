@@ -35,6 +35,10 @@ require("echarts/lib/chart/pie");
 
 require("echarts/lib/chart/lines");
 
+require("echarts/lib/chart/bar");
+
 require("echarts/lib/component/legendScroll");
 
 require("echarts/lib/component/tooltip");
+
+

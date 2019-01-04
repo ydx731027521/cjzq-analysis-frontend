@@ -3,7 +3,7 @@
     <div class="detail-box">
         <div class="detail-header">
             <span>复检详情</span>
-            <el-button type="primary" @click='handleExport'>生成质检报告</el-button>
+            <el-button type="primary" @click='handleExport'>生成复检报告</el-button>
         </div>
         <div class="result-box">
           <div class="left">
@@ -296,7 +296,6 @@
       this.queryData = this.$route.params
       let {originalQcBatchId,qcBatchId} = this.queryData
       this.id = qcBatchId
-      console.log(this.queryData)
       this._getPageData(originalQcBatchId,qcBatchId)
       this._getAllData(this.id,this.str)
     },
@@ -517,7 +516,7 @@
         let link = document.createElement('a')
         link.style.display = 'none'
         link.href = url
-        let str = '质检报告('+this.id+').xlsx'
+        let str = '复检报告('+this.id+').xlsx'
         link.setAttribute('download', str)
         document.body.appendChild(link)
         link.click()

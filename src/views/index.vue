@@ -6,8 +6,10 @@
                 <left-nav class="left-nav"></left-nav>
             </el-scrollbar>
             <div class="wrap">
-                <breadcrumb :breadCrumbList="breadCrumbList"></breadcrumb>
-                <router-view />
+                <breadcrumb :breadCrumbList="breadCrumbList" class="bread-crumb"></breadcrumb>
+                <div class="content-wrap">
+                  <router-view />
+                </div>
             </div>
         </div>
     </div>
@@ -72,7 +74,9 @@
 <style lang="less" scoped>
     .index{
         display: flex;
-        flex-flow: column;
+        display: -ms-flexbox;
+        // flex-flow: column;
+        flex-direction: column;
         height: 100%;
         overflow: hidden;
 
@@ -109,16 +113,17 @@
                 background: #F2F8F9;
                 overflow-x: none !important;
 
-                .top-nav{
-                    flex: 0 0 20px;
-                }
-
-                .breadcrumb{
-                    flex:0 0 40px;
+                .bread-crumb{
+                  height: 40px;
                 }
 
                 .content-wrap{
                     flex:1;
+                    // position: absolute;
+                    // left: 0;
+                    // right: 0;
+                    // top: 40px;
+                    // bottom: 0;
                 }
             }
         }

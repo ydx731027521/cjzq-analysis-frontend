@@ -84,42 +84,49 @@
                 <el-table-column
                         prop="businKind"
                         label="业务类型"
-                        width="180"
+                        width="200"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         prop="businSubKind"
                         label="二级分类"
-                        width="180"
+                        width="200"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         prop="businName"
                         label="三级分类"
-                        width="180"
+                        width="200"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         prop="qcStandardVersion"
                         label="版本号"
-                        width="100"
+                        width="70"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         label="状态"
                         width="100"
                         align="center">
-                        <template slot-scope="{row}">
-                            <span v-if="row.effectFlag==='生效中'" class="effect">{{row.effectFlag}}</span>
-                            <span v-if="row.effectFlag==='已失效'" class="not-effect">{{row.effectFlag}}</span>
-                            <span v-if="row.effectFlag==='待审核'" class="pending-review">{{row.effectFlag}}</span>
-                            <span v-if="row.effectFlag==='待确认'" class="pending-confirm">{{row.effectFlag}}</span>
-                        </template>
+                    <template slot-scope="{row}">
+                        <span v-if="row.effectFlag==='生效中'" class="effect">{{row.effectFlag}}</span>
+                        <span v-if="row.effectFlag==='已失效'" class="not-effect">{{row.effectFlag}}</span>
+                        <span v-if="row.effectFlag==='待审核'" class="pending-review">{{row.effectFlag}}</span>
+                        <span v-if="row.effectFlag==='待确认'" class="pending-confirm">{{row.effectFlag}}</span>
+                    </template>
                 </el-table-column>
                 <el-table-column
                         prop="beginDate"
                         label="生效日期"
-                        width="180"
+                        width="120"
+                        align="center">
+                </el-table-column>
+                <el-table-column
+                        v-if="isNoUse"
+                        prop="endDate"
+                        label="失效日期"
+                        width="120"
                         align="center">
                 </el-table-column>
                 <el-table-column
@@ -190,12 +197,13 @@
           '适当性文字留痕'
         ],
         status:[],
-        multipleSelection: []
+        multipleSelection: [],
+        isNoUse:false
       }
     },
     beforeRouteLeave(to, from, next) {
-        from.meta.keepAlive = false;
-        next();
+      from.meta.keepAlive = false;
+      next();
     },
     mounted(){
       this.businessTypeValue = "所有"
@@ -238,6 +246,8 @@
         this.$http.post(STANDARD_CONFIG_COPY,list).then(res=>{
           let {data} = res
           if(res.status === 200 && data.status==0){
+            this.effectFlag = '2'
+            this.statusFlag = false
             this._getList()
             util.success(data.message)
           }else{
@@ -286,7 +296,7 @@
         }else{
           obj.businTypeId = thirdClassId
         }
-        
+
         this.$http.post(STANDARD_CONFIG_SEARCH, obj).then(res=>{
           if (res.status === 200 && res.data.status == 0) {
             let { data } = res.data
@@ -328,9 +338,16 @@
       handleSearch(){//搜索
         if(this.statusValue === '待审核'){
           this.statusFlag = true
+          this.isNoUse = false
+        }else if(this.statusValue == '已失效'){
+          this.statusFlag = false
+          this.isNoUse = true
         }else{
           this.statusFlag = false
+          this.isNoUse = false
         }
+        console.log(this.statusValue)
+        console.log(this.isNoUse)
         this._search()
       },
       handleStatusChange(val){
@@ -346,7 +363,7 @@
         util.secondClassChange(this, this.secondClassValue, val,true)
       },
       handleThirdClassChange(val){
-        this.thirdClassValue = val 
+        this.thirdClassValue = val
         util.thirdClassChange(this, this.thirdClassValue, val)
       },
       handleCopy(){
@@ -414,10 +431,10 @@
             }
 
             .standard-status{
-              text-align: right;
-              span{
-                margin-right: 10px;
-              }
+                text-align: right;
+                span{
+                    margin-right: 10px;
+                }
             }
 
             .standard-search{
@@ -441,19 +458,19 @@
             padding: 10px;
 
             .effect{
-              color:@color-effect;
+                color:@color-effect;
             }
 
             .not-effect{
-              color:@color-notEffect;
+                color:@color-notEffect;
             }
 
             .pending-confirm{
-              color:@color-pendingConfirm;
+                color:@color-pendingConfirm;
             }
 
             .pending-review{
-              color:@color-pendingReview;
+                color:@color-pendingReview;
             }
 
             .blue{
@@ -468,13 +485,13 @@
                 margin-top: 10px;
 
                 .disable{
-                  background: #E8E8E8;
-                  color: #999;
-                  border-color: #E8E8E8;
-
-                  &:hover{
+                    background: #E8E8E8;
+                    color: #999;
                     border-color: #E8E8E8;
-                  }
+
+                    &:hover{
+                        border-color: #E8E8E8;
+                    }
                 }
             }
         }

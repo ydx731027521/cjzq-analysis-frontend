@@ -127,6 +127,9 @@ export const finalResultTransToNum = function (str) {
     case "不合格":
       number = 1
       break;
+    case "复检中":
+      number = 3
+      break;
     default:
       number = ''
       break;
@@ -201,6 +204,26 @@ export const batchTypeTrans = function (val) {
       break;
     case "所有":
       number = ""
+      break;
+  }
+  return number
+}
+
+// 复检结果的转换
+export const qcStatusTransToNum = function (val) {
+  let number = 0
+  switch (val) {
+    case "未完成":
+      number = 1
+      break;
+    case "合格":
+      number = 2
+      break;
+    case "不合格":
+      number = 3
+      break;
+    case "所有":
+      number = null
       break;
   }
   return number

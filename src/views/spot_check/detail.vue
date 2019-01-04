@@ -6,28 +6,28 @@
             <el-button type="primary" @click='handleExport'>生成抽检报告</el-button>
         </div>
         <div class="result-box">
-          <div class="left">
-              <div class="left-title">
-                  <img src="../../static/r1.png" alt="">
-              </div>
-              <div class="left-content">
-                  <p class="key">抽检结果</p>
-                  <template v-if="pageData.finalResult === '合格'">
-                    <p class="value">
-                      <img src="../../static/ok.png" alt="">
-                      <span class="green">合格</span>
-                    </p>
-                  </template>
-                  <template v-else>
-                    <p class="value">
-                      <img src="../../static/no.png" alt="">
-                      <span class="red">不合格</span>
-                    </p>
-                  </template>
-              </div>
-          </div>
-          <div class="right" id="echart">
-        </div>
+            <div class="left">
+                <div class="left-title">
+                    <img src="../../static/r1.png" alt="">
+                </div>
+                <div class="left-content">
+                    <p class="key">抽检结果</p>
+                    <template v-if="pageData.finalResult === '合格'">
+                        <p class="value">
+                            <img src="../../static/ok.png" alt="">
+                            <span class="green">合格</span>
+                        </p>
+                    </template>
+                    <template v-else>
+                        <p class="value">
+                            <img src="../../static/no.png" alt="">
+                            <span class="red">不合格</span>
+                        </p>
+                    </template>
+                </div>
+            </div>
+            <div class="right" id="echart">
+            </div>
         </div>
         <div class="content">
             <div class="title"><i class="icon-picixinxi"></i>批次信息</div>
@@ -41,10 +41,6 @@
                     <span>{{pageData.qcBatchId}}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-title">批次状态：</span>
-                    <span>{{pageData.qcStatus}}</span>
-                </div>
-                <div class="info-item">
                     <span class="info-title">创建人：</span>
                     <span>{{pageData.creator}}</span>
                 </div>
@@ -55,9 +51,17 @@
                 <div class="info-item">
                     <span class="info-title">批次质检时间：</span>
                     <template v-if="pageData.batchStartTime && pageData.batchEndTime">
-                      <span>{{pageData.batchStartTime}}</span>
-                      <span> ~ </span>
-                      <span>{{pageData.batchEndTime}}</span>
+                        <span>{{pageData.batchStartTime}}</span>
+                        <span> ~ </span>
+                        <span>{{pageData.batchEndTime}}</span>
+                    </template>
+                </div>
+                <div class="info-item">
+                    <span class="info-title">订单时间范围：</span>
+                    <template v-if="pageData.startDate && pageData.endDate">
+                        <span>{{pageData.startDate}}</span>
+                        <span> ~ </span>
+                        <span>{{pageData.endDate}}</span>
                     </template>
                 </div>
                 <div class="info-item">
@@ -77,9 +81,14 @@
                     <span class="info-title">查询数量：</span>
                     <span>{{pageData.spotOrderCount}}</span>
                 </div>
-                <div class="list-box" v-if="pageData.spotType ==='指定订单'">
-                  <div class="info-title">查询指定订单：</div>
+                <!--  v-if="pageData.spotType ==='指定订单'" -->
+                <!-- <div class="list-box" v-if="pageData.spotType ==='指定订单'">
+                  <div class="list-title">查询指定订单：</div>
                   <div class="list">{{pageData.spotOrderId}}</div>
+                </div> -->
+                <div class="list-box" v-if="pageData.spotType ==='指定订单'">
+                    <div class="list-title">查询指定订单：</div>
+                    <div class="list">{{pageData.spotOrderId}}</div>
                 </div>
             </div>
 
@@ -96,8 +105,9 @@
                     </span>
                 </div>
                 <div class="info-item">
-                    <span class="info-title">质检标准版本：</span>
+                    <span class="text-title">质检标准版本：</span>
                     <span>{{pageData.qcStdVersion}}</span>
+
                 </div>
             </div>
 
@@ -151,11 +161,11 @@
                             </el-table>
                             <!-- 要件分页 -->
                             <pagination
-                              :total="total"
-                              :currentPage="currentPage"
-                              :currentPageSize="currentPageSize"
-                              @changeCurrentPageSize="handleChangeCurrentPageSize($event,'')"
-                              @changeCurrentPage="handleChangeCurrentPage($event,'')">
+                                    :total="total"
+                                    :currentPage="currentPage"
+                                    :currentPageSize="currentPageSize"
+                                    @changeCurrentPageSize="handleChangeCurrentPageSize($event,'')"
+                                    @changeCurrentPage="handleChangeCurrentPage($event,'')">
                             </pagination>
                         </el-collapse-item>
                     </el-collapse>
@@ -168,41 +178,41 @@
                 <el-tabs v-model="activeTab" @tab-click="handleChangeTab">
                     <el-tab-pane label="全部" name="all">
                         <TableAll :data="all_data" :headerList="headerList" ref="all"></TableAll>
-                         <!-- 所有分页 -->
+                        <!-- 所有分页 -->
                         <pagination
-                          :total="all_total"
-                          :currentPage="all_currentPage"
-                          :currentPageSize="all_currentPageSize"
-                          @changeCurrentPageSize="handleChangeCurrentPageSize($event,'all_')"
-                          @changeCurrentPage="handleChangeCurrentPage($event,'all_')">
+                                :total="all_total"
+                                :currentPage="all_currentPage"
+                                :currentPageSize="all_currentPageSize"
+                                @changeCurrentPageSize="handleChangeCurrentPageSize($event,'all_')"
+                                @changeCurrentPage="handleChangeCurrentPage($event,'all_')">
                         </pagination>
                     </el-tab-pane>
                     <el-tab-pane label="仅合格订单" name="qualified">
                         <TableAll :data="qualified_data" :headerList="headerList" ref="qualified"></TableAll>
-                         <!-- 所有分页 -->
+                        <!-- 所有分页 -->
                         <pagination
-                          :total="qualified_total"
-                          :currentPage="qualified_currentPage"
-                          :currentPageSize="qualified_currentPageSize"
-                          @changeCurrentPageSize="handleChangeCurrentPageSize($event,'qualified_')"
-                          @changeCurrentPage="handleChangeCurrentPage($event,'qualified_')">
+                                :total="qualified_total"
+                                :currentPage="qualified_currentPage"
+                                :currentPageSize="qualified_currentPageSize"
+                                @changeCurrentPageSize="handleChangeCurrentPageSize($event,'qualified_')"
+                                @changeCurrentPage="handleChangeCurrentPage($event,'qualified_')">
                         </pagination>
                     </el-tab-pane>
                     <el-tab-pane label="仅不合格订单" name="unqualified">
-                       <TableAll :data="unqualified_data" :headerList="headerList" ref="unqualified"></TableAll>
-                         <!-- 所有分页 -->
+                        <TableAll :data="unqualified_data" :headerList="headerList" ref="unqualified"></TableAll>
+                        <!-- 所有分页 -->
                         <pagination
-                          :total="unqualified_total"
-                          :currentPage="unqualified_currentPage"
-                          :currentPageSize="unqualified_currentPageSize"
-                          @changeCurrentPageSize="handleChangeCurrentPageSize($event,'unqualified_')"
-                          @changeCurrentPage="handleChangeCurrentPage($event,'unqualified_')">
+                                :total="unqualified_total"
+                                :currentPage="unqualified_currentPage"
+                                :currentPageSize="unqualified_currentPageSize"
+                                @changeCurrentPageSize="handleChangeCurrentPageSize($event,'unqualified_')"
+                                @changeCurrentPage="handleChangeCurrentPage($event,'unqualified_')">
                         </pagination>
                     </el-tab-pane>
                 </el-tabs>
             </div>
             <div class="btn-back">
-              <el-button type='primary' plain @click="handleGoBack">返 回</el-button>
+                <el-button type='primary' plain @click="handleGoBack">返 回</el-button>
             </div>
         </div>
     </div>
@@ -242,7 +252,7 @@
         headerList:[
           {prop:'originalOrderId',label:'原始订单号'},
           {prop:'clientId',label:'客户号'},
-          {prop:'qcResult',label:'质检结果'} 
+          {prop:'qcResult',label:'质检结果'}
         ],
         headerListLength:3,
         all_headerList:[],
@@ -254,13 +264,11 @@
         qualified_bodyList:[],
         qualified_data:[],
         qualified_total:0,
-        qualified_headerList:[],
         unqualified_leftTableData:[],
         unqualified_headerList:[],
         unqualified_bodyList:[],
         unqualified_data:[],
         unqualified_total:0,
-        unqualified_headerList:[],
         collapseTitle:false
       }
     },
@@ -272,13 +280,13 @@
       this.$http.get(CONVENTION_BATCH_DETAIL,{params:{
           qcBatchId:id
         }}).then(res=>{
-          if(res.status === 200 && res.data.status === 0){
-            let {data} = res.data
-            let qcStdVersion = util.formatVersionStr(data.qcStdVersion)
-            this.pageData = data
-            this.pageData.qcStdVersion = qcStdVersion
-            this._initEcharts()
-          }
+        if(res.status === 200 && res.data.status === 0){
+          let {data} = res.data
+          let qcStdVersion = util.formatVersionStr(data.qcStdVersion)
+          this.pageData = data
+          this.pageData.qcStdVersion = qcStdVersion
+          this._initEcharts()
+        }
       })
 
       this._getAllData(this.id,this.str)
@@ -296,20 +304,18 @@
         // 请求固定列
         var currentPage = str+"_currentPage"
         var pageSize = str+"_currentPageSize"
-        var bodyList = str+"_bodyList"
         var leftTableData = str+'_leftTableData'
         var headerList = str+'_headerList'
         let total = str+'_total'
 
         this.$refs[str].loading = true
-        console.log(this.qcResult)
         let promise_static = new Promise((resolve,reject)=>{
           this.$http.get(DEFECTIVE_DETAIL_STATIC_LIST,{params:{
-            currentPage:this[currentPage],
-            pageSize:this[pageSize],
-            qcBatchId: id,
-            qcResult:this.qcResult
-          }}).then(res=>{
+              currentPage:this[currentPage],
+              pageSize:this[pageSize],
+              qcBatchId: id,
+              qcResult:this.qcResult
+            }}).then(res=>{
             resolve(res.data)
           }).catch(err => {
             reject(err);
@@ -318,11 +324,11 @@
         // 请求不固定列
         let promise_float = new Promise((resolve,reject)=>{
           this.$http.get(DEFECTIVE_DETAIL_ALL_FLOAT_LIST,{params:{
-            currentPage:this[currentPage],
-            pageSize:this[pageSize],
-            qcBatchId: id,
-            qcResult:this.qcResult
-          }}).then(res=>{
+              currentPage:this[currentPage],
+              pageSize:this[pageSize],
+              qcBatchId: id,
+              qcResult:this.qcResult
+            }}).then(res=>{
             resolve(res.data)
           }).catch(err => {
             reject(err);
@@ -331,7 +337,7 @@
 
         Promise.all([promise_static,promise_float]).then(res=>{
           let {items} = res[0].data
-          let {bodyList,headList} = res[1].data 
+          let {bodyList,headList} = res[1].data
           if(items&&headList){
             this[leftTableData] = items
             this[bodyList] = bodyList
@@ -349,7 +355,7 @@
         this.headerList = [
           {prop:'origOrderId',label:'原始订单号'},
           {prop:'clientId',label:'客户号'},
-          {prop:'qcResult',label:'质检结果'} 
+          {prop:'qcResult',label:'质检结果'}
         ]
       },
       _getBodyList(leftTableData,bodyList,str){
@@ -367,34 +373,34 @@
                 let value = bitem.value
                 obj[key] = value
               })
-            arr.push(obj)
+              arr.push(obj)
             }
           })
         }
         this[data] = arr
       },
       _getEssantialList(){
-          this.loading = true
-          this.$http.get(CONVENTION_BATCH_DETAIL_LIST,{params:{
+        this.loading = true
+        this.$http.get(CONVENTION_BATCH_DETAIL_LIST,{params:{
             currentPage:this.currentPage,
             pageSize:this.currentPageSize,
             qcBatchId:this.id
           }}).then(res=>{
-            let {data} = res
-            if(res.status === 200 && data.status === 0){
-              let {items,totalNum} = data.data
-              items.map(citem=>{
-                checkDim(citem.markDim,citem)
-              })
-              this.tableData = items
-              this.total = totalNum
-              this.loading = false
-            }
-          }).catch(err=>{
-            util.err()
-            console.log(err)
-          })
-     },
+          let {data} = res
+          if(res.status === 200 && data.status === 0){
+            let {items,totalNum} = data.data
+            items.map(citem=>{
+              checkDim(citem.markDim,citem)
+            })
+            this.tableData = items
+            this.total = totalNum
+            this.loading = false
+          }
+        }).catch(err=>{
+          util.err()
+          console.log(err)
+        })
+      },
       _initEcharts(){
         let {orderAmount,eligAmount,uneligAmount} = this.pageData
         util.initEcharts(this,'echart',orderAmount,eligAmount,uneligAmount,'抽检结果饼状图')
@@ -491,18 +497,18 @@
 <style lang="less" scoped>
     @import '~style/varible.less';
     .collapse /deep/ .el-collapse-item__header{
-      justify-content: center;
-      text-indent: 0 !important;
-      font-size:14px;
-      font-weight: 800;
-      color: @color-font;
+        justify-content: center;
+        text-indent: 0 !important;
+        font-size:14px;
+        font-weight: 800;
+        color: @color-font;
     }
     .collapse /deep/ .el-collapse-item__arrow.el-icon-arrow-right{
-      margin-left: 10px;
-      transform: rotate(-90deg)
+        margin-left: 10px;
+        transform: rotate(-90deg)
     }
     .collapse /deep/ .el-collapse-item__arrow.el-icon-arrow-right.is-active{
-      transform: rotate(90deg)
+        transform: rotate(90deg)
     }
 
     .detail-box{
@@ -513,7 +519,7 @@
         margin-top: -30px;
 
         .green{
-          color: @color-green;
+            color: @color-green;
         }
 
         .red{
@@ -546,61 +552,61 @@
         }
 
         .result-box{
-          overflow: hidden;
-          margin-top: 10px;
-
-          .left{
-            float: left;
-            width: 15%;
-            background: #fff;
-            margin-bottom: 20px;
             overflow: hidden;
-            box-sizing: border-box;
-            height: 300px;
-            margin-left: 3%;
+            margin-top: 10px;
 
-            &:first-child{
-              margin-left: 0;
+            .left{
+                float: left;
+                width: 15%;
+                background: #fff;
+                margin-bottom: 20px;
+                overflow: hidden;
+                box-sizing: border-box;
+                height: 300px;
+                margin-left: 3%;
+
+                &:first-child{
+                    margin-left: 0;
+                }
+
+                .left-title{
+                    margin-top: 40px;
+                }
+
+                .left-content{
+                    margin-top: 30px;
+
+                    img{
+                        vertical-align: middle;
+                        line-height: 40px;
+                        margin-right: 5px;
+                    }
+
+                    &>p{
+                        line-height: 40px;
+                    }
+
+                    .key{
+                        font-size: 18px;
+                        color: @color-font;
+                    }
+
+                    .value{
+                        font-size: 20px;
+                        color: @color-title;
+                    }
+                }
             }
 
-            .left-title{
-              margin-top: 40px;
+            .right{
+                float: left;
+                width: 82%;
+                height: 300px;
+                margin-left: 3%;
+                background: #fff;
+                box-sizing: border-box;
+                padding: 20px;
             }
-
-            .left-content{
-              margin-top: 30px;
-
-              img{
-                vertical-align: middle; 
-                line-height: 40px;
-                margin-right: 5px;  
-              }
-
-              &>p{
-                line-height: 40px;
-              }
-
-              .key{
-                font-size: 18px;
-                color: @color-font;
-              }
-
-              .value{
-                font-size: 20px;
-                color: @color-title;
-              }
-            }
-          }
-
-          .right{
-            float: left;
-            width: 82%;
-            height: 300px;
-            margin-left: 3%;
-            background: #fff;
-            box-sizing: border-box;
-            padding: 20px;
-          }
         }
 
         .content{
@@ -635,10 +641,10 @@
                 color: @color-font;
 
                 .info-title{
-                  font-weight: 800;
-                  font-size: 16px;
-                  text-decoration: none;
-                  border-bottom: 0;
+                    font-weight: 800;
+                    font-size: 16px;
+                    text-decoration: none;
+                    border-bottom: 0;
                 }
 
                 .con-name{
@@ -661,18 +667,28 @@
                 }
 
                 .list-box{
-                  overflow: hidden;
-                  width: 100%;
-                  display: flex;
-                  text-indent: 40px;
+                    overflow: hidden;
+                    width: 100%;
+                    text-indent:40px;
 
-                  .list{
-                    flex:1;
-                    text-align: left;
-                    text-indent: 0;
-                    line-height: 40px;
-                     word-wrap:break-word;
-                  }
+                    .list-title{
+                        float: left;
+                        width: 180px;
+                        text-align: left;
+                        font-weight: 800;
+                        font-size: 16px;
+                        text-decoration: none;
+                        border-bottom: 0;
+                    }
+
+                    .list{
+                        float: left;
+                        width: 80%;
+                        text-align: left;
+                        text-indent: 0;
+                        line-height: 40px;
+                        word-wrap:break-word;
+                    }
                 }
             }
 
@@ -715,10 +731,10 @@
             }
         }
         .btn-back{
-          padding-bottom: 20px;
-          button{
-            width: 200px;
-          }
+            padding-bottom: 20px;
+            button{
+                width: 200px;
+            }
         }
     }
 </style>
