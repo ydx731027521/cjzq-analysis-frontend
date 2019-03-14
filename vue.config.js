@@ -22,7 +22,7 @@ const cdn = {
     'https://unpkg.com/element-ui/lib/theme-chalk/index.css'
   ],
   js: [
-    'https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js',
+    'https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.js',
     'https://cdn.jsdelivr.net/npm/vue-router@3.0.1/dist/vue-router.min.js',
     'https://cdn.jsdelivr.net/npm/vuex@3.0.1/dist/vuex.min.js',
     'https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js',
@@ -52,8 +52,7 @@ module.exports = {
   css: {
     extract: true,
     sourceMap: false,
-    loaderOptions: {
-    },
+    loaderOptions: {},
     modules: false
   },
   parallel: require('os').cpus().length > 1,
@@ -66,7 +65,7 @@ module.exports = {
     hotOnly: false,
     proxy: {
       "/api.*": {
-        target: "http://172.16.126.16:8000/back",
+        target: "http://10.246.9.139:9000",
         changeOrigin: true,
         secure: false
       },
@@ -76,7 +75,7 @@ module.exports = {
         secure: false
       }
     },
-    before: app => { }
+    before: app => {}
   },
   pluginOptions: {
   },

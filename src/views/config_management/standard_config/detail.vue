@@ -25,7 +25,7 @@
                 <div class="content-item">
                     <span>版本号：</span>
                     <span>{{pageData.qcStandardVersion}}</span>
-                </div> 
+                </div>
                 <div class="content-item">
                     <span>生效状态：</span>
                     <span :class="effectFlagStyle">{{pageData.effectFlag}}</span>
@@ -71,7 +71,7 @@
               <div class="remark-left">
                 <p>
                   <span class="red" v-if="effectFlag === '待确认'">*</span>
-                  <span>备注：</span>
+                  <span>备　　注：</span>
                 </p>
               </div>
               <div class="remark-right">
@@ -84,11 +84,11 @@
                 </div>
                 <p v-else>{{pageData.remark}}</p>
               </div>
-                
+
             </div>
         </div>
         <div class="detail-essantial">
-            <div class="title">质检要件:</div>
+            <div class="title"><span class="red">*</span>质检要件:</div>
             <div class="detail-options" v-if="isEdit">
                 <el-button icon="el-icon-plus" type="primary" v-if="effectFlag === '待确认'" plain @click="handleCreate">新增要件</el-button>
             </div>
@@ -106,30 +106,24 @@
                 <el-table-column
                         label="序号"
                         type="index"
-                        min-width="5%"
+                        width="50"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         prop="markTypeName"
                         label="要件类型"
-                        min-width="10%"
+                        width="150"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         prop="markItemName"
                         label="要件名称"
-                        min-width="20%"
-                        align="center">
-                </el-table-column>
-                <el-table-column
-                        prop="markParam"
-                        label="要件参数"
-                        min-width="10%"
+                        width="150"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         label="筛选条件"
-                        min-width="18%"
+                        width="300"
                         align="center">
                     <template slot-scope="{row,$index}">
                         <el-input size="small" v-if="showEdit[$index]==true" v-model="row.orderFilter"></el-input>
@@ -137,24 +131,13 @@
                     </template>
                 </el-table-column>
                 <el-table-column
-                        label="筛选维度"
-                        min-width="12%"
+                        prop="qcRule"
+                        label="质检规则"
                         align="center">
-                    <template slot-scope="{row,$index}">
-                        <el-select v-model="row.markDim" placeholder="请选择筛选维度" size="small" v-if="showEdit[$index]">
-                            <el-option
-                                    v-for="item in dimList"
-                                    :key="item"
-                                    :value="item">
-                            </el-option>
-                        </el-select>
-                        <span v-if="row.markDim==='订单维度'&&!showEdit[$index]">订单维度</span>
-                        <span v-if="row.markDim==='客户维度'&&!showEdit[$index]">客户维度</span>
-                        <span v-if="row.markDim==='流水维度'&&!showEdit[$index]">流水维度</span>
-                    </template>
                 </el-table-column>
                 <el-table-column
-                        min-width="15%"
+                        v-if="isSubmitShow"
+                        width="150"
                         label="操作"
                         align="center">
                     <template scope="{row,$index}" v-if="effectFlag==='待确认'">
@@ -181,10 +164,12 @@
             </span>
         </el-dialog>
         <div class="btn-box">
-            <el-button type="primary" plain @click="handleReturn">返回</el-button>
+            <!-- <el-button type="primary" plain @click="handleReturn">返回</el-button> -->
+            <el-button plain type="primary" @click="handleClose">关闭</el-button>
             <el-button type="primary" v-if="effectFlag === '待审核'&&isPassShow" @click="confirmDialogVisible = true">审核通过</el-button>
-            <el-button type="primary" v-if="effectFlag === '待确认'&&isPassShow" @click="handleSubmitShow">提交</el-button>
-            <el-button type="danger" @click="essantialDeleteDialogVisible = true" v-if="effectFlag === '待确认'||effectFlag === '待审核'">删除</el-button>
+            <el-button type="primary" v-if="effectFlag === '待确认'&&isSubmitShow&&submitActive" @click="handleSubmitShow">提交</el-button>
+            <el-button class="noSubmit" type="info" v-if="effectFlag === '待确认'&&isSubmitShow&&!submitActive">提交</el-button>
+            <el-button type="danger" @click="essantialDeleteDialogVisible = true" v-if="(effectFlag === '待确认'&&isDeleteShow)||(effectFlag === '待审核'&&isDeleteShow)">删除</el-button>
         </div>
         <!-- 确认删除弹窗 -->
         <el-dialog
@@ -214,121 +199,7 @@
                   <el-button type="primary" @click="handleSubmit">确 定</el-button>
                 </span>
         </el-dialog>
-        <!-- 详情要件新增弹窗 -->
-        <el-dialog
-                :close-on-click-modal=false
-                :close-on-press-escape=false
-                title="新增要件"
-                :visible.sync="insertDialogVisible"
-                append-to-body
-                align="center"
-                width="80%">
-            <!-- <EssantialSearch :selectData='options' :currentPage="i_currentPage" :currentPageSize="i_currentPageSize" @getList="handleChangeData"></EssantialSearch> -->
-            <div style="border: 1px solid #F0F2F7;line-height: 70px;overflow: hidden;margin-bottom: 20px;background: #fff; width: 100%;">
-              <div style="float: left;width:25%;">
-                  <span style=" margin-right: 10px;font-size: @font-title;">要件类型</span>
-                  <el-select style="width: 150px;" v-model="i_markTypeValue" size="small" @change="handleMarkTypeChange">
-                      <el-option
-                              v-for="item in i_options"
-                              :key="item.id"
-                              :label="item.markTypeName"
-                              :value="item.id">
-                      </el-option>
-                  </el-select>
-              </div>
-              <div style="float: left;width:25%;">
-                  <span style=" margin-right: 10px;font-size: @font-title;">要件名称</span>
-                  <el-input
-                          style=" width: 150px;"
-                          placeholder="请输要件名称"
-                          v-model="i_qcNameValue"
-                          clearable
-                          size="small"
-                          class="essential-title-input">
-                  </el-input>
-              </div>
-              <div style="float: left;width:25%;">
-                <span style=" margin-right: 10px;font-size: @font-title;">要件参数:</span>
-                <el-input
-                        style=" width: 150px;"
-                        placeholder="请输要件参数"
-                        v-model="i_paramValue"
-                        clearable
-                        size="small"
-                        class="essential-title-input">
-                </el-input>
-              </div>
-              <div style="float: left;width:25%;">
-                  <el-button type="primary" size="small" style="width: 200px;" @click="handleSearch"><i style="font-size:14px;" class="el-icon-search"></i></el-button>
-              </div>
-            </div>
-            <div class="detail-insert-box">
-                <div class="add-list" style="overflow:hidden;padding:20px 0;display:flex;" v-if="detailTableData.length>0">
-                    <div class="add-list-title" style="width:100px;line-height:24px;">已添加的要件：</div>
-                    <div class="add-list-tips" style="flex:1">
-                        <el-tag type="success" size="small" style="float:left;margin-right:5px;margin-bottom:5px;" v-for="item of detailTableData" :key="item.standardMarkId">{{item.markItemName}}</el-tag>
-                    </div>
-                </div>
-                <div class="table-box">
-                    <el-table
-                            v-loading="i_loading"
-                            :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
-                            ref="multipleTable"
-                            :data="insertData"
-                            style="width: 100%"
-                            border
-                            stripe
-                            @selection-change="handleSelectionChange"
-                            size="small">
-                        <el-table-column
-                                label="序号"
-                                type="index"
-                                min-width="5%"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="markTypeName"
-                                label="要件类型"
-                                min-width="30%"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="markItemName"
-                                label="要件名称"
-                                min-width="30%"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="markParam"
-                                label="要件参数"
-                                min-width="15%"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                min-width="20%"
-                                label="操作"
-                                align="center">
-                            <template scope="{row,$index}">
-                                <el-button type="primary" size="small" @click="handleToggle(row,$index)" v-if="!row.isAdd"><i class="el-icon-plus" ></i></el-button>
-                                <el-button type="success" size="small" v-if="row.isAdd" @click="handleToggle(row,$index)"><i class="el-icon-check"></i></el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                </div>
-                <!-- 分页组件 -->
-                <Pagination
-                        :total="i_total"
-                        :currentPage="i_currentPage"
-                        :currentPageSize="i_currentPageSize"
-                        @changeCurrentPageSize="i_handleChangeCurrentPageSize"
-                        @changeCurrentPage="i_handleChangeCurrentPage">
-                </Pagination>
-                <span slot="footer">
-                    <el-button @click="insertDialogVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="insertDialogVisible = false">确 定</el-button>
-                </span>
-            </div>
-        </el-dialog>
+        
         <!-- 完成弹窗 -->
         <el-dialog
                 :close-on-click-modal=false
@@ -343,6 +214,61 @@
                 <el-button type="primary" @click="handleConfirm">确 定</el-button>
               </span>
         </el-dialog>
+
+        <!-- 新增要件 -->
+        <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
+                title="新增质检要件"
+                align="center"
+                :visible.sync="insertDialogVisible"
+                append-to-body
+                width="70%">
+            <el-row style="line-height:50px;">
+              <el-col :span="6" align="right">
+                <span style="color:red">* </span>
+                请选择要件类型：</el-col>
+              <el-col :span="16" align="left" :offset='2'>
+                <el-select v-model="c_markTypeValue" size="small" @change="handleMarkTypeChange" style=" width: 150px;">
+                        <el-option
+                                v-for="item in c_options"
+                                :key="item.id"
+                                :label="item.markTypeName"
+                                :value="item.markTypeName">
+                        </el-option>
+                    </el-select>
+              </el-col>
+            </el-row>
+            <el-row style="line-height:50px;">
+              <el-col :span="6" align="right">
+                <span style="color:red">* </span>
+                请输入要件名称：</el-col>
+              <el-col :span="12" align="left" :offset='2'>
+                <el-input type="text" v-model="c_essantialName" size="small"></el-input>  
+              </el-col>
+            </el-row>
+            <el-row style="">
+              <el-col :span="6" align="right">
+                <span style="color:red">* </span>
+                订单筛选条件：</el-col>
+              <el-col :span="12" align="left" :offset='2' style="height:100px">
+                <el-input type="textarea" v-model="c_condition" size="small"></el-input>  
+              </el-col>
+            </el-row>
+            <el-row  style="margin-bottom:20px">
+              <el-col :span="6" align="right">
+                <span style="color:red">* </span>
+                质检规则：
+              </el-col>
+              <el-col :span="12" align="left" :offset='2'>
+                <el-input type="textarea" v-model="c_qcRule" size="small" style="height:200px" :autosize="{ minRows: 10, maxRows: 4}"></el-input>  
+              </el-col>
+            </el-row>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="handleEssantialCancel">取 消</el-button>
+              <el-button type="primary" @click="handleEssantialConfirm">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -355,11 +281,19 @@
   import {mapState} from 'vuex'
   import CONSTANT from 'api/constant'
   import util from 'tools/util'
-  let {REVIEW} = CONSTANT
+  let {REVIEW,ESSANTIAL_OPT} = CONSTANT
   let  {STANDARD_CONFIG_LIST_DETAIL,STANDARD_CONFIG_DETAIL_DELETE,STANDARD_INSERT,CONFIG_LIST,CONFIG_SELECT,STANDARD_CONFIG_PASS,STANDARD_CONFIG_SUBMIT} = URL
   export default {
     name:'standardDetail',
     components:{Pagination,EssantialSearch},
+    props:{
+      qcStandardId:{
+        type:String
+      },
+      effectFlag:{
+        type:String
+      }
+    },
     data(){
       return {
         loading:true,
@@ -376,27 +310,33 @@
         detailTableData:[],//要件列表总的数据
         detailList:[],//要件列表当前页展示的数据
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         // total:this.totalNum,
         pageData:{},
-        effectFlag:"",
+        // effectFlag:"",
         showEdit: [],
         inputValue:'',
         isDeleting:{},
         insertData:[],
         i_total:0,
-        i_currentPage:1,  
-        i_currentPageSize:20,
+        i_currentPage:1,
+        i_pageSize:20,
         i_options:[],
         i_qcNameValue:'',
         i_markTypeValue:'',
         i_paramValue:'',
+        c_markTypeValue:'',
+        c_options:[],
+        c_essantialName:'',
+        c_condition:'',
+        c_qcRule:'',
         multipleTable:[],
         deleteDialogVisible:false,
         insertDialogVisible:false,
         confirmDialogVisible:false,
         submitDialogVisible:false,
         essantialDeleteDialogVisible:false,
+        insertDialogVisible:false,
         markType:'',
         qcName:'',
         options:[],
@@ -409,34 +349,27 @@
           disabledDate(time) {
             return time.getTime() < Date.now();
           }
-        }
+        },
+        params:{},
+        prop_id:'',
+        prop_effectFlag:''
       }
     },
-    // beforeRouteLeave(to, from, next) {
-    //   if (to.path == "/essantial/standard") {
-    //     to.meta.keepAlive = true;
-    //   } else {
-    //     to.meta.keepAlive = false;
-    //   }
-    //   next();
-    // },
+
     mounted(){
-      if(!this.$route.params){
-        this.$router.push('/essantial/standard')
-      }
-      let {id,effectFlag} = this.$route.params
-      // if(!id||!effectFlag){
+      // if(!this.$route.params){
       //   this.$router.push('/essantial/standard')
       // }
-      this.effectFlag = effectFlag
-      this.id = id
-      // 获取维度
-      util.getDim(this,'dimList')
+      let {id,effectFlag,params} = this.$route.params
 
+      // this.effectFlag = effectFlag
+      // this.id = id
+      // this.params = params
+      // 获取维度
+      // util.getDim(this,'dimList')
       this._getTableData(STANDARD_CONFIG_LIST_DETAIL,"get",{
         qcStandardId:id
       },"detailTableData")
-      
     },
     methods:{
       _initShowEdit(){
@@ -460,10 +393,10 @@
         this.i_loading = true
         let id = this.i_markTypeValue==='所有'?'':this.i_markTypeValue
         let param = this.i_paramValue.trim()
-        let qcName = this.i_qcNameValue.trim()
+
         this.$http.get(CONFIG_LIST,{params:{
             currentPage:this.i_currentPage,
-            pageSize:this.i_currentPageSize,
+            pageSize:this.i_pageSize,
             markType:id,
             markItemName:this.i_qcNameValue,
             markParam:param
@@ -475,7 +408,7 @@
               this.i_total = data.totalNum
               this.i_loading = false
             }else{
-              util.err()
+              util.error(res.data.message)
             }
         })
       },
@@ -487,13 +420,10 @@
           if (res.status === 200 && res.data.status ==0) {
             let {data} = res
             util.success(data.message)
-            this.$router.push('/essantial/standard')
+            this.$router.push({name:'质检标准配置',params:{params:this.params}})
           }else{
-            util.error(data.message)
+            util.error(res.data.message)
           }
-        }).catch(err=>{
-          util.err()
-          console.log(err)
         })
       },
       _getTableData(url,method,params,tableName){
@@ -501,7 +431,8 @@
           this.$http.get(url,{params:params}).then(res=>{
             if (res.status === 200 && res.data.status == 0) {
               let { data } = res.data
-              let {markItemList} = data
+              // let {markItemList} = data
+              let {standardMarkList} = data
               let version = util.formatVersionStr(data.qcStandardVersion)
               this.pageData = data
               this.pageData.qcStandardVersion = version
@@ -511,17 +442,16 @@
 
               checkTransform(data.effectFlag,this.pageData)
 
-              let arr = markItemList.map(item=>{
-                checkDim(item.markDim,item)
-                return item
-              })
-              this[tableName] = arr
+              // let arr = markItemList.map(item=>{
+              //   checkDim(item.markDim,item)
+              //   return item
+              // })
+              this[tableName] = standardMarkList
               this._setTableData()
               this._initShowEdit()
+            }else{
+              util.error(res.data.message)
             }
-          }).catch(err=>{
-            util.err()
-            console.log(err)
           })
         }else{
           this.$http.post(url,{params}).then(res=>{
@@ -531,10 +461,9 @@
               this[tableName] = data.markItemList.items
               this.loading = false
               this.total = data.markItemList.totalNum
+            }else{
+              util.error(res.data.message)
             }
-          }).catch(err=>{
-            util.err()
-            console.log(err)
           })
         }
       },
@@ -549,6 +478,7 @@
         })
         if(flag){
           this.detailTableData.splice(index,1)
+          this.showEdit.splice(index,1)
           this.$set(row,'isAdd',false)
           util.warn('取消添加')
         }else{
@@ -571,51 +501,36 @@
         })
         this.$http.post(STANDARD_CONFIG_PASS,list).then(res=>{
           if(res.status === 200 && res.data.status === 0){
-              util.success(res.data.message)
-              this.$router.push('/essantial/standard')
+              util.success(res.data.message)  
+              // this.$router.push({name:'质检标准配置',params:{params:this.params}})
+              setTimeout(()=>{
+                windwo.close()
+              },1000)
           }else{
             util.error(res.data.message)
           }
-        }).catch(err=>{
-          util.err()
         })
       },
       _setTableData(){
-        let start = (this.currentPage - 1) * this.currentPageSize;
-        let end = this.currentPage * this.currentPageSize;
+        let start = (this.currentPage - 1) * this.pageSize;
+        let end = this.currentPage * this.pageSize;
         this.tableData = this.detailTableData.slice(start, end);
       },
       _check(){
         let markDim_flag = true
-        if(this.date&&this.textarea&&(this.detailTableData.length>0)){
-          let flag = true
-          this.showEdit.map(item=>{
-            if(item!=''||item!=false){
-              flag = false
-              return
-            }
-          })
-
-          if(flag||this.showEdit.length<1){
-            this.detailTableData.map(item=>{
-              if(!item.markDim){
-                markDim_flag = false
-              }
-            })
-
-            if(markDim_flag){
-              return true
-            }else{
-              this.$message.error("请选择筛选维度")
+        if(this.activeDate&&this.remarkValue){
+          if(this.insertTableData.length>0){
+            if(this.remarkValue.length>255){
+              util.error('备注字数超出范围，请保持在255个字符内')
               return false
             }
+            return true
           }else{
-            this.$message.error("请先保存编辑")
+            util.error("请新增要件")
             return false
           }
-          
         }else{
-          util.error('请填写完整信息')
+          util.error("请填写完整信息")
           return false
         }
       },
@@ -638,9 +553,12 @@
             if(res.status === 200 && res.data.status === 0){
               let {data} = res
               util.success(data.message)
-              this.$router.push('/essantial/standard')
+              this.$router.push({name:'质检标准配置',params:{params:this.params}})
+              setTimeout(()=>{
+                window.close()
+              },1000)
             }else{
-              util.error(data.message)
+              util.error(res.data.message)
             }
           })
       },
@@ -653,16 +571,8 @@
         this.deleteDialogVisible = true
       },
       handleEditDone(row,index){
-        let list = []
-        for(let i=0;i<this.showEdit.length;i++){
-          if(i === index){
-            list.push('')
-          }else{
-            list.push(this.showEdit[i])
-          }
-        }
-        this.showEdit = list
-          console.log(this.showEdit)
+        this.$delete(this.showEdit,index)
+        this.$set(this.showEdit,index,'')
       },
       handleEditCancle(row,index){
         row.orderFilter = this.inputValue
@@ -684,29 +594,13 @@
         this.total --
         this.deleteDialogVisible = false
       },
-      handleEditAll(){
-        this.editDialogVisible = true
-      },
-      handleEditCancel(){
-        this.editDialogVisible = false
-      },
-      handleEditConfirm(data){
-        let {beginDate,remark} = data
-        this.pageData.beginDate = beginDate
-        this.pageData.remark = remark
-        this.editDialogVisible = false
-      },
-      handleSave(){
-        this.pageData.markItemList.items = this.detailTableData
-        this._save(this.pageData)
-      },
       handleCreate(){
         this._getInsertSelectData()
         this._getInsertList()
         this.insertDialogVisible = true
       },
       i_handleChangeCurrentPageSize(val){
-        this.i_currentPageSize = val
+        this.i_pageSize = val
         this.i_currentPage = 1
         this._getInsertList()
       },
@@ -741,10 +635,14 @@
         this._delete()
       },
       handleReturn(){
-        this.$router.go(-1)
+        this.$router.push({name:'质检标准配置',params:{params:this.params}})
       },
       handleMarkTypeChange(val){
-        this.i_markTypeValue =val
+        this.c_markTypeValue = val
+        let list = this.c_options.filter(item=>{
+          return item.markTypeName === val
+        })
+        this.c_markTypeId = list[0].id
       },
       handleSearch(){
         this.i_currentPage =1
@@ -754,6 +652,37 @@
         if(this._check()){
           this.submitDialogVisible = true
         }
+      },
+      handleEssantialCancel(){
+        this.insertDialogVisible = false
+      },
+      handleEssantialConfirm(){
+      //           {
+      //     markTypeName,
+      //     markItemName,
+      //     orderFilter,
+      //     markDim
+      //   }
+        const markTypeId = this.c_options.filter(item=>{
+          return this.c_markTypeValue == item.markTypeName
+        })[0].id
+        
+        this.insertTableData.push({
+          markTypeId,
+          markTypeName:this.c_markTypeValue,
+          markItemName:this.c_essantialName,
+          orderFilter:this.c_condition,
+          qcRule:this.c_qcRule
+        })
+        this.insertDialogVisible = false
+        this.c_markTypeValue = ''
+        this.c_markTypeId = ''
+        this.c_essantialName = ''
+        this.c_condition = ''
+        this.c_qcRule = ''
+      },
+      handleClose(){
+        this.$emit('detailClose')
       }
     },
     computed:{
@@ -789,16 +718,46 @@
         return str
       },
       // 该版本不区分提交和审核通过的角色，现使用同一标准
-      // isSubmitShow(){
-      //   if(this.authorityList.indexOf()){}
-      // }
-      isPassShow(){
-        if(this.authorityList.indexOf(REVIEW)>0)
-          return true
-        else
+      isSubmitShow(){
+        if(this.effectFlag == '待确认'){
+          if(this.authorityList.indexOf(ESSANTIAL_OPT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+            return true
+          else
+            return false
+        }else{
           return false
-      }
-    }
+        }
+      },
+      isPassShow(){
+        if(this.effectFlag == '待审核'){
+          if(this.authorityList.indexOf(REVIEW)>=0||this.authorityList.indexOf('ADMIN')>=0)
+            return true
+          else
+            return false
+        }else{
+          return false
+        }
+      },
+      isDeleteShow(){
+        let flag
+        if(this.effectFlag == '待确认'){
+          flag = this.authorityList.indexOf(ESSANTIAL_OPT)>=0||this.authorityList.indexOf('ADMIN')>=0?true:false
+        }else if(this.effectFlag == '待审核'){
+          flag = this.authorityList.indexOf(REVIEW)>=0||this.authorityList.indexOf('ADMIN')>=0?true:false
+        }else{
+          flag = false
+        }
+        return flag
+      },
+      submitActive(){
+        let flag = true
+        this.showEdit.map(item=>{
+          if(item == true)
+            flag = false
+        })
+        return flag
+      },
+    },
   }
 </script>
 
@@ -869,7 +828,7 @@
                 line-height: 40px;
 
                 .remark-left{
-                  width: 5%;
+
                   float: left;
                 }
 
@@ -885,7 +844,7 @@
                       margin-top: 10px;
                   }
                 }
-            
+
 
             }
 
@@ -927,7 +886,13 @@
                 text-indent: 20px;
                 text-align: left;
                 margin-bottom: 10px !important;
+
+                .tip{
+                  color:#777;
+                  font-size: 12px;
+                }
             }
+
         }
 
         .detail-table{
@@ -949,8 +914,8 @@
                 height: 32px !important;
             }
 
-            .el-input.el-input--small{
-                height: 32px;
+            .select{
+              width: 90%
             }
         }
 
@@ -961,6 +926,15 @@
                 margin-right: 60px;
                 width: 200px !important;
             }
+
+            .noSubmit{
+              cursor:not-allowed;
+              &:hover{
+                background: #909399;
+              }
+            }
         }
+
+        
     }
 </style>

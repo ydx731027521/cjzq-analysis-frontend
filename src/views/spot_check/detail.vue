@@ -3,7 +3,7 @@
     <div class="detail-box">
         <div class="detail-header">
             <span>抽检详情</span>
-            <el-button type="primary" @click='handleExport'>生成抽检报告</el-button>
+            <el-button v-if="isExportShow" type="primary" @click='handleExport'>生成抽检报告</el-button>
         </div>
         <div class="result-box">
             <div class="left">
@@ -56,7 +56,7 @@
                         <span>{{pageData.batchEndTime}}</span>
                     </template>
                 </div>
-                <div class="info-item">
+                <div class="info-item" v-if="pageData.spotType !='指定订单'">
                     <span class="info-title">订单时间范围：</span>
                     <template v-if="pageData.startDate && pageData.endDate">
                         <span>{{pageData.startDate}}</span>
@@ -88,7 +88,10 @@
                 </div> -->
                 <div class="list-box" v-if="pageData.spotType ==='指定订单'">
                     <div class="list-title">查询指定订单：</div>
-                    <div class="list">{{pageData.spotOrderId}}</div>
+                    <!-- <div class="list">{{pageData.spotOrderId}}</div> -->
+                    <div class="list">
+                      <el-tag type='info' v-for="(item,index) of spotOrderIdList" :key="index">{{item}}</el-tag>
+                    </div>
                 </div>
             </div>
 
@@ -115,7 +118,7 @@
             <div class="collapse">
                 <div class="collapse-borderbox">
                     <el-collapse v-model="activeNames" @change="handleCollClick">
-                        <el-collapse-item :title="collapseTitle?'点击收起质检要件':'点击展开质检要件'" name="list" class="collapse-item">
+                        <el-collapse-item :title="collapseTitle?'点击展开质检要件':'点击收起质检要件'" name="list" class="collapse-item">
                             <el-table
                                     v-loading="loading"
                                     :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
@@ -125,37 +128,30 @@
                                 <el-table-column
                                         label="序号"
                                         type="index"
-                                        min-width="10%"
+                                        width="50"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="markTypeName"
                                         label="要件类型"
-                                        min-width="10%"
+                                        width="100"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="markItemName"
                                         label="要件名称"
-                                        min-width="20%"
-                                        align="center">
-                                </el-table-column>
-                                <el-table-column
-                                        prop="markParam"
-                                        label="要件参数"
-                                        min-width="15%"
+                                        width="200"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="orderFilter"
                                         label="筛选条件"
-                                        min-width="35%"
+                                        width="140"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
-                                        prop="markDim"
-                                        label="筛选维度"
-                                        min-width="10%"
+                                        prop="qcRule"
+                                        label="质检规则"
                                         align="center">
                                 </el-table-column>
                             </el-table>
@@ -163,7 +159,7 @@
                             <pagination
                                     :total="total"
                                     :currentPage="currentPage"
-                                    :currentPageSize="currentPageSize"
+                                    :pageSize="pageSize"
                                     @changeCurrentPageSize="handleChangeCurrentPageSize($event,'')"
                                     @changeCurrentPage="handleChangeCurrentPage($event,'')">
                             </pagination>
@@ -182,7 +178,7 @@
                         <pagination
                                 :total="all_total"
                                 :currentPage="all_currentPage"
-                                :currentPageSize="all_currentPageSize"
+                                :pageSize="all_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'all_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'all_')">
                         </pagination>
@@ -193,7 +189,7 @@
                         <pagination
                                 :total="qualified_total"
                                 :currentPage="qualified_currentPage"
-                                :currentPageSize="qualified_currentPageSize"
+                                :pageSize="qualified_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'qualified_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'qualified_')">
                         </pagination>
@@ -204,7 +200,7 @@
                         <pagination
                                 :total="unqualified_total"
                                 :currentPage="unqualified_currentPage"
-                                :currentPageSize="unqualified_currentPageSize"
+                                :pageSize="unqualified_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'unqualified_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'unqualified_')">
                         </pagination>
@@ -225,6 +221,9 @@
   import {conventionResultTrans,checkDim} from 'tools/transform'
   import util from 'tools/util'
   import baseUrl from '../../setBaseUrl'
+  import CONSTANT from 'api/constant'
+  import {mapState} from 'vuex'
+  let {SPOTCHECK_EXPORT} = CONSTANT
   let {CONVENTION_BATCH_DETAIL,DEFECTIVE_DETAIL_STATIC_LIST,DEFECTIVE_DETAIL_ALL_FLOAT_LIST,SPOT_CHECK_EXCEL_DETAIL_EXPORT,CONVENTION_BATCH_DETAIL_LIST} = URL
   export default {
     name:'conventionDetail',
@@ -233,7 +232,7 @@
       return {
         loading:false,
         id:'',
-        activeNames:"",
+        activeNames:"list",
         activeTab:"qualified",
         pageData:{},
         tableData:[],
@@ -241,14 +240,14 @@
         str:"qualified",
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         all_currentPage:1,
-        all_currentPageSize:20,
+        all_pageSize:20,
         all_total:0,
         qualified_currentPage:1,
-        qualified_currentPageSize:20,
+        qualified_pageSize:20,
         unqualified_currentPage:1,
-        unqualified_currentPageSize:20,
+        unqualified_pageSize:20,
         headerList:[
           {prop:'originalOrderId',label:'原始订单号'},
           {prop:'clientId',label:'客户号'},
@@ -269,13 +268,16 @@
         unqualified_bodyList:[],
         unqualified_data:[],
         unqualified_total:0,
-        collapseTitle:false
+        collapseTitle:false,
+        spotOrderIdList:[],
+        params:{}
       }
     },
     mounted(){
       util.wrapToTop(this)
       this.qcResult = 0
-      let {id} = this.$route.params
+      let {id,params} = this.$route.params
+      this.params = params
       this.id = id
       this.$http.get(CONVENTION_BATCH_DETAIL,{params:{
           qcBatchId:id
@@ -285,25 +287,29 @@
           let qcStdVersion = util.formatVersionStr(data.qcStdVersion)
           this.pageData = data
           this.pageData.qcStdVersion = qcStdVersion
+          if(this.pageData.spotOrderId){
+            this.spotOrderIdList = this.pageData.spotOrderId.split(/[,，]/)    
+          }
           this._initEcharts()
         }
       })
 
       this._getAllData(this.id,this.str)
+      this._getEssantialList()
     },
-    beforeRouteLeave(to, from, next) {
-      if (to.path == "/spotcheck/convention") {
-        to.meta.keepAlive = true;
-      } else {
-        to.meta.keepAlive = false;
-      }
-      next();
-    },
+    // beforeRouteLeave(to, from, next) {
+    //   if (to.path == "/spotcheck/convention") {
+    //     to.meta.keepAlive = true;
+    //   } else {
+    //     to.meta.keepAlive = false;
+    //   }
+    //   next();
+    // },
     methods:{
       _getAllData(id,str){
         // 请求固定列
         var currentPage = str+"_currentPage"
-        var pageSize = str+"_currentPageSize"
+        var pageSize = str+"_pageSize"
         var leftTableData = str+'_leftTableData'
         var headerList = str+'_headerList'
         let total = str+'_total'
@@ -383,7 +389,7 @@
         this.loading = true
         this.$http.get(CONVENTION_BATCH_DETAIL_LIST,{params:{
             currentPage:this.currentPage,
-            pageSize:this.currentPageSize,
+            pageSize:this.pageSize,
             qcBatchId:this.id
           }}).then(res=>{
           let {data} = res
@@ -395,10 +401,9 @@
             this.tableData = items
             this.total = totalNum
             this.loading = false
+          }else{
+            util.error(res.data.message)
           }
-        }).catch(err=>{
-          util.err()
-          console.log(err)
         })
       },
       _initEcharts(){
@@ -428,7 +433,12 @@
           },
           responseType: 'blob'
         }).then(response => {
-          this.download(response)
+          let IEVersion = util.IEVersion()
+          if(IEVersion!=-1){
+            this.IEDown(response)
+          }else{
+            this.download(response)
+          }
         }).catch((error) => {
           util.err()
         })
@@ -450,9 +460,9 @@
         this._getAllData(this.id,this.str)
       },
       handleChangeCurrentPageSize(val,str){
-        let currentPageSize = str + "currentPageSize"
+        let pageSize = str + "pageSize"
         let currentPage = str + "currentPage"
-        this[currentPageSize] = val
+        this[pageSize] = val
         this[currentPage] = 1
         if(!str){
           this._getEssantialList()
@@ -470,15 +480,15 @@
         }
       },
       handleCollClick(){
-        if(!this.collapseTitle)
-          this._getEssantialList()
+        // if(!this.collapseTitle)
+        //   this._getEssantialList()
         this.collapseTitle = !this.collapseTitle
       },
       handleExport(){
         this._export()
       },
       handleGoBack(){
-        this.$router.go(-1)
+        this.$router.push({name:'抽检批次',params:{params:this.params}})
       },
       download (data) {
         let url = window.URL.createObjectURL(new Blob([data.data]))
@@ -489,7 +499,27 @@
         link.setAttribute('download', str)
         document.body.appendChild(link)
         link.click()
+      },
+      IEDown(data){
+        let time = (new Date()).getTime()
+        let str = '抽检报告('+this.id+').xlsx'
+        var winname = window.open('', '_blank', 'top=10000');
+        var strHTML = data.data;
+        winname.document.open('application/vnd.ms-excel', 'export excel');
+        window.navigator.msSaveBlob(data.data,str);
+        winname.close();
       }
+    },
+    computed:{
+        ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isExportShow(){
+        if(this.authorityList.indexOf(SPOTCHECK_EXPORT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
     }
   }
 </script>
@@ -669,7 +699,6 @@
                 .list-box{
                     overflow: hidden;
                     width: 100%;
-                    text-indent:40px;
 
                     .list-title{
                         float: left;
@@ -679,6 +708,7 @@
                         font-size: 16px;
                         text-decoration: none;
                         border-bottom: 0;
+                        text-indent:40px;
                     }
 
                     .list{
@@ -688,6 +718,10 @@
                         text-indent: 0;
                         line-height: 40px;
                         word-wrap:break-word;
+
+                        &>span{
+                          margin: 0 5px;
+                        }
                     }
                 }
             }

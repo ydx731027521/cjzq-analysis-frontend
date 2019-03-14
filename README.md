@@ -1,5 +1,17 @@
 # qx
 
+## 项目模块介绍
+```
+-view:存放所有页面
+
+--config_management:配置管理
+--login：登陆
+--quality_managemnet: 质检管理
+--spot_check:抽检管理
+--statistical_query:统计查询
+--system_management:系统管理
+```
+
 ## Project setup
 ```
 npm install

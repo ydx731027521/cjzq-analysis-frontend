@@ -1,6 +1,6 @@
 <template>
     <div class="essential">
-        <!-- <EssantialSearch :selectData='options' :currentPage="currentPage" :currentPageSize="currentPageSize" @getList="handleChangeData" ref='essantianSearch'></EssantialSearch> -->
+        <!-- <EssantialSearch :selectData='options' :currentPage="currentPage" :pageSize="pageSize" @getList="handleChangeData" ref='essantianSearch'></EssantialSearch> -->
         <div class="essential-box">
             <div class="essential-select">
                 <span>要件类型:</span>
@@ -76,7 +76,7 @@
         <Pagination
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </Pagination>
@@ -101,7 +101,7 @@
         options:[],
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         paramValue:''
       }
     },
@@ -125,7 +125,7 @@
             markType:id,
             markItemName:this.qcNameValue,
             currentPage:this.currentPage,
-            pageSize:this.currentPageSize
+            pageSize:this.pageSize
           }}).then(res=>{
           if (res.status === 200 && res.data.status == 0) {
             let { data } = res.data
@@ -145,7 +145,7 @@
         })
       },
       handleChangeCurrentPageSize(val){
-        this.currentPageSize = val;
+        this.pageSize = val;
         this.currentPage = 1
         this._getList()
 
@@ -165,7 +165,7 @@
       }
     },
     wactch:{
-      currentPageSize(val,oldVal){
+      pageSize(val,oldVal){
         this._searchData()
       }
     }

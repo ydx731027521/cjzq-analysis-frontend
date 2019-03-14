@@ -34,7 +34,9 @@ import {
   DropdownItem,
   Scrollbar,
   Select,
-  Option
+  Option,
+  transfer,
+  Tree
 } from 'element-ui';
 
 
@@ -73,3 +75,5 @@ Vue.use(Footer);
 Vue.use(Loading);
 Vue.use(Message);
 Vue.use(Container);
+Vue.use(transfer);
+Vue.use(Tree);

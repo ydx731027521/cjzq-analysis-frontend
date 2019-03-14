@@ -1,6 +1,6 @@
 <template>
     <div class="version">
-        <h1>版本号：0.0.8</h1>
+        <h1>版本号：1.0.4</h1>
     </div>
 </template>
 

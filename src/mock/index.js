@@ -6,7 +6,16 @@ const Mock = require('mockjs')
 
 import URL from 'api/url.js'
 
-let { STANDARD_CONFIG_LIST, STANDARD_CONFIG_LIST_DETAIL, STANDARD_CONFIG_MENU, STANDARD_CONFIG_SEARCH, STANDARD_FIRSTCLASS, STANDARD_SECONDCLASS, CONVENTION_LIST, DEFECTIVE_LIST } = URL
+let {
+  STANDARD_CONFIG_LIST,
+  STANDARD_CONFIG_LIST_DETAIL,
+  STANDARD_CONFIG_MENU,
+  STANDARD_CONFIG_SEARCH,
+  STANDARD_FIRSTCLASS,
+  STANDARD_SECONDCLASS,
+  CONVENTION_LIST,
+  DEFECTIVE_LIST
+} = URL
 
 // 获取 mock.Random 对象
 
@@ -15,7 +24,6 @@ const Random = Mock.Random
 // mock一组数据
 
 const produceData = function (opt) {
-  // console.log('opt', opt)
 
   let articles = []
 
@@ -134,8 +142,7 @@ const conventionTableData = function () {
     "data": {
       "currentPage": 0,
       "isMore": 0,
-      "items": [
-        {
+      "items": [{
           "batchEndTime": "1111",
           "batchType": "抽检",
           "businName": "临柜",
@@ -187,8 +194,7 @@ const defectiveTableData = function () {
     "data": {
       "currentPage": 0,
       "isMore": 0,
-      "items": [
-        {
+      "items": [{
           "branchNo": "22",
           "clientId": "1313",
           "clientName": "jock",
@@ -230,5 +236,3 @@ Mock.mock('/insertTableData', /post|get/i, insertTableData)
 Mock.mock('/cycleTableData', /post|get/i, cycleTableData)
 Mock.mock(CONVENTION_LIST, /post|get/i, conventionTableData)
 Mock.mock(DEFECTIVE_LIST, /post|get/i, defectiveTableData)
-
-

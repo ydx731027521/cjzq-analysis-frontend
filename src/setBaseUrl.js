@@ -1,18 +1,22 @@
 let baseUrl = "";
+let host = window.document.location.host;
+
 switch (process.env.NODE_ENV) {
-  case 'development':
-    // baseUrl = "http://10.246.9.4:9000"
-    baseUrl = "http://10.246.164.21:9000"
-    // baseUrl = "http://10.246.164.26:9000"
-    // baseUrl = "http://10.246.9.67:9000"
-    // baseUrl = "http://localhost:8080"
-    break
-  case 'test':
-    baseUrl = process.env.VUE_APP_BASE_URL + "/back" //测试环境
-    break
-  case 'production':
-    baseUrl = "https://www.cnblogs.com/XHappyness/p/7686267.html"   //生产环境
-    break
+  case "development":
+    // wo
+    // baseUrl = "http://10.246.9.104:9000"
+    // wang
+    // baseUrl = "http://10.246.164.21:9000";
+    baseUrl = "http://10.246.164.1:9000"
+    // zhuo
+    // baseUrl = "http://10.246.9.81:9000"
+    break;
+  case "test":
+    baseUrl = "http://" + host + "/back"; //测试环境
+    break;
+  case "production":
+    baseUrl = "http://" + host + "/back"; //生产环境
+    break;
 }
 
 export default baseUrl;

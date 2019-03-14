@@ -2,10 +2,10 @@
     <div class="manage">
         <div class="manage-box">
             <div class="manage-item">
-                <item class="left">
+                <div class="item-left">
                     <span>业务类型：</span>
-                </item>
-                <item class="right">
+                </div>
+                <div class="item-right">
                     <el-select v-model="businessTypeValue" size="small" @change="handleTypeChange">
                         <el-option
                                 v-for="item in businessType"
@@ -15,7 +15,7 @@
                         >
                         </el-option>
                     </el-select>
-                </item>
+                </div>
             </div>
             <div class="manage-item">
                 <div class="item-left">
@@ -59,7 +59,7 @@
                 <div class="item-right">
                     <el-select v-model="batchTypeValue" size="small">
                         <el-option
-                                v-for="item in batchType"
+                                v-for="item in batchTypeList"
                                 :key="item.key"
                                 :value="item.value"
                         >
@@ -105,7 +105,7 @@
         </div>
         <!-- 操作 -->
         <div class="opt">
-            <el-button type="primary" plain @click="handleInsert" v-if="isShowOpt">
+            <el-button v-if="isInsertShow" type="primary" plain @click="handleInsert">
                 <i class="el-icon-plus"></i>
                 新增人工批次
             </el-button>
@@ -149,12 +149,18 @@
                         align="center">
                 </el-table-column>
                 <el-table-column
+                        prop="finalUneligAmount"
+                        label="不合格订单数"
+                        width="120px"
+                        align="center">
+                </el-table-column>
+                <el-table-column
                         prop="qcResult"
                         label="初检结果"
                         fixed='left'
                         width="100px"
                         align="center">
-                    <template slot-scope="{row,$index}">
+                    <template slot-scope="{row}">
                         <span v-if="row.qcStatus==='已完成-成功'" class="qualified">合格</span>
                         <span v-else-if="row.qcStatus==='已完成-失败'" class="unqualified">不合格</span>
                         <span v-else-if="row.qcStatus==='异常'" class="unusual">{{row.qcStatus}}</span>
@@ -166,16 +172,22 @@
                         fixed='left'
                         width="100px"
                         align="center">
-                    <template slot-scope="{row,$index}">
+                    <template slot-scope="{row}">
                         <span class="qualified" v-if="row.finalResult === '合格'">{{row.finalResult}}</span>
                         <span class="unqualified" v-if="row.finalResult === '不合格'">{{row.finalResult}}</span>
                         <span class="recheck" v-if="row.finalResult === '复检中'">{{row.finalResult}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
-                        prop="batchEndTime"
-                        label="质检完成时间"
-                        width="120"
+                        prop="batchStartTime"
+                        label="质检开始时间"
+                        width="180"
+                        align="center">
+                </el-table-column>
+                <el-table-column
+                        prop="consumTime"
+                        label="耗时"
+                        width="180"
                         align="center">
                 </el-table-column>
                 <el-table-column
@@ -195,22 +207,32 @@
                     </template>
                 </el-table-column>
                 <el-table-column
-                        v-if="isShowOpt"
+                        width="200"
+                        label="标准编号"
+                        align="center">
+                    <template slot-scope="{row}">
+                        <el-tooltip :content="row.qcStandardId" placement="top" effect="light">
+                            <p class="batchId-box">{{row.qcStandardId}}</p>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+                <el-table-column
                         label="操作"
                         align="center">
                     <template slot-scope="{row}">
                         <span class="red" v-if="row.qcStatus==='未开始'" @click="handleDelete(row)">删除</span>
-                        <span class="blue" v-if="row.qcStatus==='已完成-失败'" @click="handleDeal(row)">次品详情</span>
+                        <span class="blue" v-if="row.finalResult==='不合格'&&isDetailSHow" @click="handleDeal(row)">次品详情</span>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
         <!-- 分页 -->
         <pagination
+                v-if="total!=0"
                 ref="pagination"
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </pagination>
@@ -319,8 +341,11 @@
   import Pagination from 'components/common/Pagination.vue'
   import util from 'tools/util'
   import URL from 'api/url'
+  import CONSTANT from 'api/constant'
+  import {mapState} from 'vuex'
   import {finalResultTrans,statusTrans,finalResultTransToNum,batchTypeTrans} from 'tools/transform'
   let {CONVENTION_LIST,DEFECTIVE_BATCH_AND_STATUS,CONVENTION_BATCH_INSERT,CONVENTION_BATCH_DETELE} = URL
+  let {CONVENTION_INSERT,CONVENTION_DETAIL_EXPORT} = CONSTANT
   export default {
     name:'manage',
     components:{
@@ -361,11 +386,11 @@
         qcStatusKey:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         magageTableData:[],
         isInsert:false,
         isShowOpt:false,
-        batchType:[
+        batchTypeList:[
           {
             "key": "",
             "value": "所有"
@@ -380,6 +405,7 @@
             "value": "所有"
           },
         ],
+        batchType:'',
         pickOptions:{
           disabledDate(time){
             let curDate = (new Date()).getTime();
@@ -387,13 +413,15 @@
             let threeMonths = curDate - three;
             return time.getTime()+24 * 3600 * 1000 > Date.now() || time.getTime() < threeMonths;
           }
-        }
+        },
+        businTypeId :'',
+        batchTypeStr:''
       }
     },
     mounted(){
-      util.getBusin(this,'businessType','1','hasAll')
-      util.getBatchInfo(this,'qcType','batchType')
       let queryData = this.$route.params
+      let {params} = this.$route.params
+
       let arr = Object.keys(queryData)
       let {authorityList} = util.getSession()
       if(authorityList.indexOf('DEFECTIVE_MANAGEMENT')!=-1){
@@ -402,47 +430,57 @@
       if(arr.length != 0){
         delete queryData.id
         this._initSearchData(queryData)
+
+        if(params){
+          let keyList = Object.keys(params)
+          keyList.map(item=>{
+            this[item] = params[item]
+          })
+        }else{
+            util.getBusin(this,'businessType','1','hasAll')
+            util.getBatchInfo(this,'qcType','batchTypeList')
+        }
         this._getList(this.searchData)
       }else{
         this.businessTypeValue = "所有"
         this.secondClassValue = "所有"
         this.thirdClassValue = "所有"
         this.loading = true
+        util.getBusin(this,'businessType','1','hasAll')
+        util.getBatchInfo(this,'qcType','batchTypeList')
         this._getList(this.searchData)
       }
-
     },
-    beforeRouteLeave(to, from, next) {
-      from.meta.keepAlive = false;
-      next();
-    },
+    // beforeRouteLeave(to, from, next) {
+    //   from.meta.keepAlive = false;
+    //   next();
+    // },
     methods:{
       _getList(params){
         this.loading = true
         this.$http.post(CONVENTION_LIST,params).then(res=>{
           if (res.status === 200 && res.data.status == 0) {
             let {data} = res.data
-            util.formatBussine(data.items,'bussine')
-            this.total = data.totalNum
-            finalResultTrans(data.items)
-            statusTrans(data.items)
-            util.batchTimeTrans(data.items)
-            util.orderTime(data.items)
-            this.magageTableData = data.items
+            if(data){
+              util.formatBussine(data.items,'bussine')
+              this.total = data.totalNum
+              finalResultTrans(data.items)
+              statusTrans(data.items)
+              util.batchTimeTrans(data.items)
+              util.orderTime(data.items)
+              this.magageTableData = data.items
+            }
             this.loading = false
           }else{
-            util.err()
+            util.error(res.data.message)
           }
-        }).catch(err => {
-          util.err()
-          console.log(err)
         })
       },
       _initSearchData(obj){
         this.batchEndTime = obj.batchEndTime
         this.qcBatchId = obj.batchType
         this.currentPage = obj.currentPage*1
-        this.currentPageSize = obj.pageSize*1
+        this.pageSize = obj.pageSize*1
         this.batchStartTime = obj.batchStartTime
         this.qcStatusKey = obj.finalResult
         this.qcBatchIdValue = obj.qcBatchId
@@ -460,8 +498,8 @@
       _i_clear(){
         this.i_titleValue = ''
         this.i_businessTypeValue = '',
-        this.i_secondClassValue = '',
-        this.i_thirdClassValue = ''
+          this.i_secondClassValue = '',
+          this.i_thirdClassValue = ''
         this.i_dateValue = []
       },
       _insert(){
@@ -491,7 +529,7 @@
               this._i_clear()
               this.dialogVisible = false
               this._getList(this.searchData)
-              
+
             }else{
               util.error(data.message)
             }
@@ -512,16 +550,63 @@
       },
       handleShow(row,index){
         let {qcBatchId} = row
-        this.$router.push({name:'批次管理详情',params:{id:qcBatchId}})
+        let obj = {
+          currentPage:this.currentPage,
+          pageSize:this.pageSize,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassId,
+          businTypeId:this.businTypeId,
+          batchEndTime:this.batchEndTime,
+          batchStartTime: this.batchStartTime,
+          checkDateValue:this.checkDateValue,
+          batchTypeValue:this.batchTypeValue,
+          qcStatusValue:this.qcStatusValue,
+          qcBatchIdValue:this.qcBatchIdValue,
+          batchType:this.batchType,
+          qcStatusKey:this.qcStatusKey,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          qcType:this.qcType,
+          batchTypeList:this.batchTypeList
+        }
+        this.$router.push({name:'批次管理详情',params:{id:qcBatchId,params:obj}})
       },
       handleInsert(){
         util.getBusin(this,'i_businessType','1',false)
-
         this.dialogVisible = true
       },
       handleDeal(row){
         let {qcBatchId} = row
-        this.$router.push({name:'次品详情',params:{qcBatchId}})
+        let obj = {
+          currentPage:this.currentPage,
+          pageSize:this.pageSize,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassId,
+          businTypeId:this.businTypeId,
+          batchEndTime:this.batchEndTime,
+          batchStartTime: this.batchStartTime,
+          checkDateValue:this.checkDateValue,
+          batchTypeValue:this.batchTypeValue,
+          qcStatusValue:this.qcStatusValue,
+          qcBatchIdValue:this.qcBatchIdValue,
+          batchType:this.batchType,
+          qcStatusKey:this.qcStatusKey,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          qcType:this.qcType,
+          batchTypeList:this.batchTypeList
+        }
+        this.$router.push({name:'次品详情',params:{qcBatchId,isSpecial:true,params:obj}})
       },
       handleCancel(){
         this.dialogVisible = false
@@ -540,7 +625,7 @@
       },
       handleChangeCurrentPageSize(val){
         util.wrapToTop(this)
-        this.currentPageSize = val
+        this.pageSize = val
         this._search(this.searchData)
       },
       handleChangeCurrentPage(val){
@@ -608,18 +693,35 @@
         }else{
           businTypeId = thirdClassId
         }
+        this.businTypeId = businTypeId
 
         let batchType = batchTypeTrans(this.batchTypeValue)
+        this.batchType = batchType
         return {
-          businTypeId,
+          businTypeId:this.businTypeId,
           batchEndTime: this.batchEndTime,
           batchStartTime: this.batchStartTime,
-          batchType,
+          batchType:this.batchType,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize,
+          pageSize: this.pageSize,
           qcBatchId: this.qcBatchIdValue,
           finalResult: this.qcStatusKey
         }
+      },
+      ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isInsertShow(){
+        if(this.authorityList.indexOf(CONVENTION_INSERT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
+      isDetailSHow(){
+        if(this.authorityList.indexOf(CONVENTION_DETAIL_EXPORT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
       }
     },
     watch:{

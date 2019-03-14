@@ -54,22 +54,23 @@
                     <span>营业部：</span>
                 </div>
                 <div class="item-right">
-                    <el-select v-model="thirdClassValue" size="small" @change="handleThirdClassChange">
+                    <!-- <el-select v-model="thirdClassValue" size="small" @change="handleThirdClassChange">
                         <el-option
                                 v-for="item in thirdClass"
                                 :key="item.id"
                                 :label="item.businName"
                                 :value="item.businName">
                         </el-option>
-                    </el-select>
+                    </el-select> -->
+                    <el-input size="small" type="text" v-model="branchName" clearable></el-input>
                 </div>
             </div>
             <div class="search-item">
                 <div class="item-left">
-                    <span>客户号：</span>
+                    <span>批次号：</span>
                 </div>
                 <div class="item-right">
-                    <el-input type="text" size="small" clearable></el-input>
+                    <el-input type="text" size="small" v-model="qcBatchId" clearable></el-input>
                 </div>
             </div>
             <div class="date-pick">
@@ -110,31 +111,25 @@
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="markItemName"
+                            prop="uneligAmount"
                             label="次品总数"
                             min-width="15%"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="dealDateTime"
-                            label="客户号"
-                            width="150"
-                            align="center">
-                    </el-table-column>
-                    <el-table-column
-                            prop="remark"
+                            prop="finalUneligAmount"
                             label="剩余次品"
                             min-width="15%"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="remark"
+                            prop="repaired"
                             label="已修复"
                             min-width="15%"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="remark"
+                            prop="unProcessed"
                             label="无需处理"
                             min-width="15%"
                             align="center">
@@ -145,7 +140,7 @@
             <pagination
                     :total="total"
                     :currentPage="currentPage"
-                    :currentPageSize="currentPageSize"
+                    :pageSize="pageSize"
                     @changeCurrentPageSize="handleChangeCurrentPageSize"
                     @changeCurrentPage="handleChangeCurrentPage">
             </pagination>
@@ -156,6 +151,8 @@
 <script>
   import util from 'tools/util'
   import Pagination from 'components/common/Pagination.vue'
+  import URL from 'api/url'
+  let {STATISTICAL_DEFECTIVE} = URL
 
   export default {
     name: "defectiveStatistics",
@@ -179,8 +176,10 @@
         batchEndTime:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
-        tableData:[]
+        pageSize:20,
+        tableData:[],
+        branchName:'',
+        qcBatchId:''
       }
     },
     mounted(){
@@ -188,10 +187,21 @@
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
       util.getBusin(this,'businessType','1',true)
+      this._getList(this.params)
     },
     methods:{
       _getList(params){
-
+        this.loading = true
+        this.$http.post(STATISTICAL_DEFECTIVE,params).then(res=>{
+          if(res.status === 200 && res.data.status === 0){
+            let {data} = res.data
+            this.tableData = data.items
+            this.total = data.totalNum
+            this.loading = false
+          }
+        }).catch(err=>{
+          util.error()
+        })
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -212,7 +222,7 @@
       handleChangeCurrentPageSize(val){
         util.wrapToTop(this)
         this.currentPage = 1
-        this.currentPageSize = val
+        this.pageSize = val
         this._getList(this.params)
       },
       handleChangeCurrentPage(val){
@@ -238,13 +248,12 @@
 
         return {
           businTypeId,
-          finalResult: this.finalResTypeKey,
-          qcBatchId: this.qcBatchIdValue.trim(),
+          qcBatchId: this.qcBatchId.trim(),
+          branchName: this.branchName.trim(),
           batchEndTime: this.batchEndTime,
           batchStartTime: this.batchStartTime,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize,
-          isReBatch: this.isReBatch
+          pageSize: this.pageSize,
         }
       }
     },

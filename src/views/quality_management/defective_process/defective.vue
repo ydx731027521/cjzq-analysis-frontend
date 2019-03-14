@@ -78,7 +78,7 @@
         <div class="content">
             <div class="table-box">
                 <div class="btn">
-                    <el-button type="primary" plain @click="handleExport"><i class="el-icon-download"></i>导出</el-button>
+                    <el-button type="primary" plain @click="handleExport" v-if="isExportShow"><i class="el-icon-download"></i>导出</el-button>
                 </div>
                 <div class="table">
                     <el-table
@@ -111,7 +111,7 @@
                         <el-table-column
                                 prop="qcBatchId"
                                 label="批次号"
-                                min-width="25%"
+                                min-width="26%"
                                 align="center">
                         </el-table-column>
                         <el-table-column
@@ -122,6 +122,7 @@
                         </el-table-column>
                         <el-table-column
                                 label="操作"
+                                v-if="isDetailShow"
                                 min-width="10%"
                                 align="center">
                             <template slot-scope="{row,$index}">
@@ -134,9 +135,10 @@
         </div>
         <!-- 分页 -->
         <pagination
+                v-if="total!=0"
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </pagination>
@@ -148,6 +150,10 @@
   import Pagination from 'components/common/Pagination.vue'
   import baseUrl from '../../../setBaseUrl'
   import URL from 'api/url'
+  import CONSTANT from 'api/constant'
+  import {mapState} from 'vuex'
+  import { Message } from 'element-ui'
+  let {DEFECTIVE_EXPORT,CONVENTION_DETAIL_EXPORT,DEFECTIVE_VIEW} = CONSTANT
   let {DEFECTIVE_LIST,DEFECTIVE_DETAIL,DEFECTIVE_EXCEL_EXPORT} = URL
   import util from 'tools/util'
   export default {
@@ -164,7 +170,7 @@
         secondClassValue:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         businessType:[],
         thirdClass:[],
         secondClass:[],
@@ -175,19 +181,27 @@
         endDate:'',
         defectiveTableData:[],
         multipleSelection: [],
-        qcBatchId:''
+        qcBatchId:'',
+        businTypeId:'',
+        message:{}
       }
     },
     mounted(){
       this.businessTypeValue = "所有"
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
+      // util.getBusin(this,'businessType','1',true)
+      let {params} = this.$route.params
+      if(params){
+        let keyList = Object.keys(params)
+        keyList.map(item=>{
+          this[item] = params[item]
+        })
+      }else{
+        util.getBusin(this,'businessType','1',true)
+      }
+
       this._getlist(this.searchData)
-      util.getBusin(this,'businessType','1',true)
-    },
-    beforeRouteLeave(to, from, next) {
-      from.meta.keepAlive = false;
-      next();
     },
     methods:{
       _getlist(params){
@@ -195,10 +209,14 @@
         this.$http.post(DEFECTIVE_LIST,params).then(res=>{
           if (res.status === 200 && res.data.status === 0) {
             let {data} = res.data
-            util.formatBussine(data.items,'bussine')
-            this.defectiveTableData = data.items
-            this.total = data.totalNum
+            if(data){
+              util.formatBussine(data.items,'bussine')
+              this.defectiveTableData = data.items
+              this.total = data.totalNum
+            }
             this.loading = false
+          }else{
+            util.error(res.data.message)
           }
         })
       },
@@ -207,6 +225,11 @@
         if(this.multipleSelection.length>0){
           this.multipleSelection.map(item=>{
             str += item.qcBatchId+','
+          })
+          this.message = Message({
+            showClose: true,
+            message: '正在导出中...',
+            duration:0
           })
         }else{
           this.$message({
@@ -225,19 +248,42 @@
             'Authorization':"Bearer " + token,
             'Content-Type': 'application/json'
           },
-          responseType: 'blob'
+          responseType: 'blob',
+          timeout:1000*60*120,
         }).then(response => {
-          this.download(response)
+          let IEVersion = util.IEVersion()
+          if(IEVersion!=-1){
+            this.IEDown(response)
+          }else{
+            this.download(response)
+          }
+          this.message.close()
         }).catch((err) => {
+          this.message.close()
           util.err()
-          console.log(err)
         })
       },
       handleSelectionChange(val){
         this.multipleSelection = val
       },
       handleDetail(row,index){
-        this.$router.push({name:'次品详情',params:{qcBatchId:row.qcBatchId}})
+        let obj ={
+          ...this.searchData,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          checkDateValue:this.checkDateValue,
+          qcBatchId:this.qcBatchId,
+          isStatistical: false,
+          businTypeId:this.businTypeId,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassIdm,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass
+        }
+        this.$router.push({name:'次品详情',params:{qcBatchId:row.qcBatchId,params:obj}})
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -254,7 +300,7 @@
       handleChangeCurrentPageSize(val){
         util.wrapToTop(this)
         this.currentPage = 1
-        this.currentPageSize = val
+        this.pageSize = val
         this._getlist(this.searchData)
       },
       handleChangeCurrentPage(val){
@@ -263,6 +309,7 @@
         this._getlist(this.searchData)
       },
       handleSearch(){
+        this.currentPage = 1
         this._getlist(this.searchData)
       },
       handleExport(){
@@ -278,6 +325,14 @@
         link.setAttribute('download', str)
         document.body.appendChild(link)
         link.click()
+      },
+      IEDown(data){
+        let time = (new Date()).getTime()
+        let str = '次品处理('+time+').xlsx'
+        var winname = window.open('', '_blank', 'top=10000');
+        winname.document.open('application/vnd.ms-excel', 'export excel');
+        window.navigator.msSaveBlob(data.data,str);
+        winname.close();
       }
     },
     computed:{
@@ -294,16 +349,32 @@
         }else{
           businTypeId = thirdClassId
         }
+        this.businTypeId = businTypeId
 
         return {
-          businTypeId,
+          businTypeId:this.businTypeId,
           batchEndTime: this.endDate,
           batchStartTime: this.beginDate,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize,
+          pageSize: this.pageSize,
           qcBatchId: this.qcBatchId
         }
-      }
+      },
+      ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isExportShow(){
+        if(this.authorityList.indexOf(DEFECTIVE_EXPORT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
+      isDetailShow(){
+        if(this.authorityList.indexOf(DEFECTIVE_VIEW)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
     },
     watch:{
       checkDateValue(val,oldval){
@@ -328,7 +399,7 @@
         .content{
             padding: 10px;
             display: flex;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             background: #fff;
 
             .search-box{
@@ -392,7 +463,7 @@
             }
 
             .table-box {
-                margin-top: 20px;
+                margin-top: 10px;
                 width: 100%;
 
                 .btn{

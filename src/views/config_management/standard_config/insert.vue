@@ -142,7 +142,7 @@
                 </el-table-column>
             </el-table>
         </div>
-        <!-- 分页组件 -->
+
         <div class="btn-box">
             <el-button @click="handleCancle">返 回</el-button>
             <el-button type="primary" @click="handleDone">完 成</el-button>
@@ -164,7 +164,7 @@
         </el-dialog>
 
         <!-- 新建质检要件弹窗 -->
-        <el-dialog
+        <!-- <el-dialog
                 title="新增要件"
                 :visible.sync="createDialogVisible"
                 width="70%"
@@ -173,44 +173,44 @@
                 :close-on-press-escape=false
                 :show-close=false
                 align="center">
-            <!-- <EssantialSearch :selectData='options' :currentPage="c_currentPage" :currentPageSize="c_currentPageSize" @getList="handleChangeData" ref='essantialSearch'></EssantialSearch> -->
+           
             <div style="border: 1px solid #F0F2F7;line-height: 70px;overflow: hidden;margin-bottom: 20px;background: #fff; width: 100%;">
-              <div style="float: left;width:25%;">
-                  <span style=" margin-right: 10px;font-size: @font-title;">要件类型</span>
-                  <el-select v-model="c_markTypeValue" size="small" @change="handleMarkTypeChange" style=" width: 150px;">
-                      <el-option
-                              v-for="item in c_options"
-                              :key="item.id"
-                              :label="item.markTypeName"
-                              :value="item.id">
-                      </el-option>
-                  </el-select>
-              </div>
-              <div style="float: left;width:25%;">
-                  <span style=" margin-right: 10px;font-size: @font-title;">要件名称</span>
-                  <el-input
-                          style=" width: 150px;"
-                          placeholder="请输要件名称"
-                          v-model="c_qcNameValue"
-                          clearable
-                          size="small"
-                          class="essential-title-input">
-                  </el-input>
-              </div>
-              <div style="float: left;width:25%;">
-                <span style=" margin-right: 10px;font-size: @font-title;">要件参数:</span>
-                <el-input
-                        style=" width: 150px;"
-                        placeholder="请输要件参数"
-                        v-model="c_paramValue"
-                        clearable
-                        size="small"
-                        class="essential-title-input">
-                </el-input>
-              </div>
-              <div style="float: left;width:25%;">
-                  <el-button type="primary" size="small" style="width: 150px;" @click="handleSearch"><i style="font-size:14px;" class="el-icon-search"></i></el-button>
-              </div>
+                <div style="float: left;width:25%;">
+                    <span style=" margin-right: 10px;font-size: @font-title;">要件类型</span>
+                    <el-select v-model="c_markTypeValue" size="small" @change="handleMarkTypeChange" style=" width: 150px;">
+                        <el-option
+                                v-for="item in c_options"
+                                :key="item.id"
+                                :label="item.markTypeName"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                </div>
+                <div style="float: left;width:25%;">
+                    <span style=" margin-right: 10px;font-size: @font-title;">要件名称</span>
+                    <el-input
+                            style=" width: 150px;"
+                            placeholder="请输要件名称"
+                            v-model="c_qcNameValue"
+                            clearable
+                            size="small"
+                            class="essential-title-input">
+                    </el-input>
+                </div>
+                <div style="float: left;width:25%;">
+                    <span style=" margin-right: 10px;font-size: @font-title;">要件参数:</span>
+                    <el-input
+                            style=" width: 150px;"
+                            placeholder="请输要件参数"
+                            v-model="c_paramValue"
+                            clearable
+                            size="small"
+                            class="essential-title-input">
+                    </el-input>
+                </div>
+                <div style="float: left;width:25%;">
+                    <el-button type="primary" size="small" style="width: 150px;" @click="handleSearch"><i style="font-size:14px;" class="el-icon-search"></i></el-button>
+                </div>
             </div>
             <div class="add-list" style="overflow:hidden;padding:0 0 20px;display:flex;" v-if="insertTableData.length>0">
                 <div class="add-list-title" style="width:100px;line-height:24px;">已添加的要件：</div>
@@ -263,13 +263,13 @@
                         </template>
                     </el-table-column>
                 </el-table>
-            </div>
+            </div> -->
 
             <!-- 分页组件 -->
-            <Pagination
+            <!-- <Pagination
                     :total="c_total"
                     :currentPage="c_currentPage"
-                    :currentPageSize="c_currentPageSize"
+                    :pageSize="c_pageSize"
                     @changeCurrentPageSize="c_handleChangeCurrentPageSize"
                     @changeCurrentPage="c_handleChangeCurrentPage">
             </Pagination>
@@ -277,7 +277,7 @@
                 <el-button @click="createDialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="handleConfirm">确 定</el-button>
               </span>
-        </el-dialog>
+        </el-dialog> -->
 
         <!-- 删除弹窗 -->
         <el-dialog
@@ -291,6 +291,45 @@
             <span slot="footer" class="dialog-footer">
             <el-button @click="handleDeleteCancel">取 消</el-button>
             <el-button type="primary" @click="handleDeleteConfirm">确 定</el-button>
+          </span>
+        </el-dialog>
+
+        <!-- 新增要件 -->
+        <el-dialog
+                class="insert-dialog"
+                :close-on-click-modal=false
+                :close-on-press-escape=false
+                title="新增质检要件"
+                align="center"
+                :visible.sync="insertDialogVisible"
+                append-to-body
+                width="50%">
+            <el-row style="line-height:50px;">
+              <el-col :span="8" align="center">
+                <span style="color:red">* </span>
+                请选择要件类型：</el-col>
+              <el-col :span="16" align="left">
+                <el-select v-model="c_markTypeValue" size="small" @change="handleMarkTypeChange" style=" width: 150px;">
+                        <el-option
+                                v-for="item in c_options"
+                                :key="item.id"
+                                :label="item.markTypeName"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+              </el-col>
+            </el-row>
+            <el-row style="line-height:50px;">
+              <el-col :span="8" align="center">
+                <span style="color:red">* </span>
+                请输入要件名称：</el-col>
+              <el-col :span="12" align="left">
+                <el-input type="text" v-model="essantialName" size="small"></el-input>  
+              </el-col>
+            </el-row>
+            <span slot="footer" class="dialog-footer">
+            <el-button @click="handleInsertCancel">取 消</el-button>
+            <el-button type="primary" @click="handleInsertConfirm">确 定</el-button>
           </span>
         </el-dialog>
     </div>
@@ -312,6 +351,7 @@
     },
     data(){
       return {
+        i_loading:false,
         loading:false,
         c_loading:false,
         activeDate:'',
@@ -327,9 +367,9 @@
         statusValue:'',
         effectFlag: 0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         c_currentPage:1,
-        c_currentPageSize:20,
+        c_pageSize:20,
         c_total:0,
         c_options:[],
         c_qcNameValue:'',
@@ -342,6 +382,7 @@
         createDialogVisible:false,
         deleteDialogVisible:false,
         confirmDialogVisible:false,
+        insertDialogVisible:true,
         isDeleting:{},
         markType:'',
         qcName:'',
@@ -353,7 +394,8 @@
         markTypeValue:'',
         qcNameValue:'',
         options:[],
-        dimList:[]
+        dimList:[],
+        essantialName:''
       }
     },
     // beforeRouteLeave(to, from, next) {
@@ -371,7 +413,7 @@
       this._getInsertSelectData()
     },
     methods:{
-       _initOptions(){
+      _initOptions(){
         this.c_options = [{markTypeName:'所有'}]
       },
       _getInsertSelectData(){
@@ -388,7 +430,7 @@
         let qcName = this.c_qcNameValue.trim()
         this.$http.get(CONFIG_LIST,{params:{
             currentPage:this.c_currentPage,
-            pageSize:this.c_currentPageSize,
+            pageSize:this.c_pageSize,
             markType:id,
             markItemName:qcName,
             markParam:param
@@ -402,7 +444,7 @@
       },
       _changeTableData(){
         let currentPage = this.currentPage;
-        let currentPageSize = this.currentPageSize;
+        let pageSize = this.pageSize;
         util.freshTableData(this,'tableData','insertTableData')
         util.wrapToTop(this)
       },
@@ -420,9 +462,14 @@
           let {data} = res
           if (res.status === 200 && res.data.status == 0) {
             util.success(data.message)
-            this.$router.push({name:'质检标准配置',params:{
-              isInsert: true
-            }})
+            if(this.$route.params.isTree){
+              this.$router.push({name:'业务管理'})
+            }else{
+              this.$router.push({name:'质检标准配置',params:{
+                isInsert: true
+              }})
+            }
+            
           }else{
             util.error(data.success)
           }
@@ -433,8 +480,8 @@
         this.insertTableData = list
       },
       _setTableData(){
-        let start = (this.currentPage - 1) * this.currentPageSize;
-        let end = this.currentPage * this.currentPageSize;
+        let start = (this.currentPage - 1) * this.pageSize;
+        let end = this.currentPage * this.pageSize;
         this.tableData = this.insertTableData.slice(start, end);
       },
       _toggle(row){
@@ -472,24 +519,23 @@
               return
             }
           })
-          if(flag||this.showEdit.length<1){
-            this.insertTableData.map(item=>{
-              if(!item.markDim){
-                markDim_flag = false
-              }
-            })
-
-            if(markDim_flag){
-              return true
-            }else{
-              this.$message.error("请选择筛选维度")
-              return false
+          this.insertTableData.map(item=>{
+            if(!item.markDim){
+              markDim_flag = false
             }
+          })
+          if(!markDim_flag){
+            util.error('请选择筛选维度')
+            return false
+          }
+
+          if(flag||this.showEdit.length<1){
+            return true
           }else{
             this.$message.error("请先保存编辑")
             return false
           }
-          
+
         }else{
           this.$message.error("请填写完整信息")
           return false
@@ -521,7 +567,7 @@
       },
       c_handleChangeCurrentPageSize(val){
         this.c_currentPage = 1
-        this.c_currentPageSize = val
+        this.c_pageSize = val
         this._getInsertList()
       },
       c_handleChangeCurrentPage(val){
@@ -537,7 +583,13 @@
         this.createDialogVisible = false
       },
       handleCancle(){
-        this.$router.go(-1)
+         if(this.$route.params.isTree){
+            this.$router.push({name:'业务管理'})
+          }else{
+            this.$router.push({name:'质检标准配置',params:{
+              isInsert: true
+            }})
+          }
       },
       handleDone(){
         if(this._check()){
@@ -553,7 +605,7 @@
         util.secondClassChange(this, this.secondClassValue, val,false)
       },
       handleThirdClassChange(val){
-        this.thirdClassValue = val 
+        this.thirdClassValue = val
         util.thirdClassChange(this, this.thirdClassValue, val)
       },
       handleToggle(row,index){
@@ -612,7 +664,10 @@
         height: 32px !important;
     }
     .insert-box /deep/ .el-dialog__close.el-icon.el-icon-close{
-      display: none;
+        display: none;
+    }
+    .insert-box /deep/ .el-row{
+        line-height: 50px !important;
     }
     .insert-box{
         width: 96%;
@@ -622,7 +677,10 @@
         margin-bottom: 10px;
         margin-top: -30px;
 
-
+        .red{
+            line-height: 30px;
+            color: #FF0000;
+        }
         // .create-dialog{
         //     overflow: hidden;
         //     .create-search-box{
@@ -665,11 +723,6 @@
                 float: left;
                 text-align: right;
                 margin-right: 2%;
-
-                .red{
-                    line-height: 30px;
-                    color: #FF0000;
-                }
             }
 
             .select-type,.active-date,.remark{

@@ -54,14 +54,15 @@
                     <span>营业部：</span>
                 </div>
                 <div class="item-right">
-                    <el-select v-model="thirdClassValue" size="small" @change="handleThirdClassChange">
+                    <!-- <el-select v-model="thirdClassValue" size="small" @change="handleThirdClassChange">
                         <el-option
                                 v-for="item in thirdClass"
                                 :key="item.id"
                                 :label="item.businName"
                                 :value="item.businName">
                         </el-option>
-                    </el-select>
+                    </el-select> -->
+                    <el-input size="small" type="text" v-model="branchName" clearable></el-input>
                 </div>
             </div>
             <div class="search-item">
@@ -69,7 +70,7 @@
                     <span>客户号：</span>
                 </div>
                 <div class="item-right">
-                    <el-input type="text" size="small" clearable></el-input>
+                    <el-input type="text" size="small" v-model="clientId" clearable></el-input>
                 </div>
             </div>
             <div class="date-pick">
@@ -102,7 +103,7 @@
                         @selection-change="handleSelectionChange">
                     <el-table-column
                             type="selection"
-                            width="50"
+                            min-width="5%"
                             align="center">
                     </el-table-column>
                     <el-table-column
@@ -114,43 +115,46 @@
                     <el-table-column
                             prop="bussine"
                             label="业务类型"
-                            width="300"
+                            width="350"
                             align="center">
                     </el-table-column>
                     <el-table-column
                             prop="qcBatchId"
                             label="批次号"
-                            width="200"
+                            width="300"
                             align="center">
+                            <!-- <template slot-scope="{row}">
+                              <span class="blue" @click="handleShowDetail(row)">{{row.qcBatchId}}</span>
+                            </template> -->
                     </el-table-column>
                     <el-table-column
-                            prop="markItemName"
+                            prop="batchStartTime"
                             label="质检开始时间"
-                            width="200"
-                            align="center">
-                    </el-table-column>
-                    <el-table-column
-                            prop="dealDateTime"
-                            label="客户号"
                             width="150"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="remark"
+                            prop="clientId"
+                            label="客户号"
+                            width="100"
+                            align="center">
+                    </el-table-column>
+                    <el-table-column
+                            prop="branchName"
                             label="客户营业部"
-                            width="200"
+                            width="250"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="remark"
+                            prop="origOrderId"
                             label="原始订单号"
-                            width="200"
+                            width="220"
                             align="center">
                     </el-table-column>
                     <el-table-column
-                            prop="remark"
+                            prop="markItemName"
                             label="缺失要件"
-                            width="200"
+                            width="250"
                             align="center">
                     </el-table-column>
                     <el-table-column
@@ -159,6 +163,17 @@
                             width="200"
                             align="center">
                     </el-table-column>
+                    <!-- <el-table-column
+                            prop="qcBatchId"
+                            label="批次号"
+                            width="200"
+                            align="center">
+                            <template slot-scope="{row}">
+                                <el-tooltip :content="row.qcBatchId" placement="top" effect="light">
+                                  <p class="batchId-box">{{row.qcBatchId}}</p>
+                                </el-tooltip>
+                            </template>
+                    </el-table-column> -->
                     <el-table-column
                             prop="remark"
                             label="备注"
@@ -169,9 +184,10 @@
             </div>
             <!-- 分页 -->
             <pagination
+                    v-if="total!=0"
                     :total="total"
                     :currentPage="currentPage"
-                    :currentPageSize="currentPageSize"
+                    :pageSize="pageSize"
                     @changeCurrentPageSize="handleChangeCurrentPageSize"
                     @changeCurrentPage="handleChangeCurrentPage">
             </pagination>
@@ -182,7 +198,12 @@
 <script>
   import util from 'tools/util'
   import Pagination from 'components/common/Pagination.vue'
-
+  import URL from 'api/url'
+  import baseUrl from '../../../setBaseUrl'
+  import {
+    Message
+  } from "element-ui";
+  let {STATISTICAL_DEFECTIVE_QUERY,STATISTICAL_EXPORT } = URL
   export default {
     name: "defectiveQuery",
     components:{
@@ -205,8 +226,12 @@
         batchEndTime:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
-        tableData:[]
+        pageSize:20,
+        tableData:[],
+        branchName:'',
+        clientId:'',
+        multipleSelection:[],
+        message:{}
       }
     },
     mounted(){
@@ -214,16 +239,44 @@
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
       util.getBusin(this,'businessType','1',true)
+
+      let {params} = this.$route.params
+      if(params){
+        let keyList = Object.keys(params)
+        keyList.map(item=>{
+          this[item] = params[item]
+        })
+      }
+      this._getList(this.params)
     },
     methods:{
       _getList(params){
-
+        this.loading = true
+        this.$http.post(STATISTICAL_DEFECTIVE_QUERY,params).then(res=>{
+          if(res.status === 200 && res.data.status === 0){
+            let {data} = res.data
+            if(data){
+              util.formatBussine(data.items,'bussine')
+              util.batchTimeTrans(data.items,'batchStartTime')
+              this.tableData = data.items
+              this.total = data.totalNum
+            }
+            this.loading = false
+          }else{
+            util.error(res.data.message)
+          }
+        })
       },
       _export(){
         let str = ''
         if(this.multipleSelection.length>0){
           this.multipleSelection.map(item=>{
-            str += item.qcBatchId+','
+            str += item.orderMarkRelId+','
+          })
+          this.message = Message({
+            showClose: true,
+            message: '正在导出中...',
+            duration:0
           })
         }else{
           this.$message({
@@ -237,18 +290,28 @@
         let token = this.$store.state.user.token
         axios({
           method: 'get',
-          url: baseUrl+DEFECTIVE_EXCEL_EXPORT+'?batchIds='+str,
+          url: baseUrl+STATISTICAL_EXPORT+'?orderMarkRelIds='+str,
           headers:{
             'Authorization':"Bearer " + token,
             'Content-Type': 'application/json'
           },
-          responseType: 'blob'
+          responseType: 'blob',
+          timeout:1000*60*120,
         }).then(response => {
-          this.download(response)
+          let IEVersion = util.IEVersion()
+          if(IEVersion!=-1){
+            this.IEDown(response)
+          }else{
+            this.download(response)
+          }
+          this.message.close()
         }).catch((err) => {
+          this.message.close()
           util.err()
-          console.log(err)
         })
+      },
+      handleSelectionChange(val){
+        this.multipleSelection = val
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -269,7 +332,7 @@
       handleChangeCurrentPageSize(val){
         util.wrapToTop(this)
         this.currentPage = 1
-        this.currentPageSize = val
+        this.pageSize = val
         this._getList(this.params)
       },
       handleChangeCurrentPage(val){
@@ -280,6 +343,16 @@
       handleExport(){
         this._export()
       },
+      // handleShowDetail(row){
+      //   let obj ={
+      //     ...this.params,
+      //     businessTypeValue:this.businessTypeValue,
+      //     secondClassValue:this.secondClassValue,
+      //     thirdClassValue:this.thirdClassValue,
+      //     isStatistical: true
+      //   }
+      //   this.$router.push({name:'次品详情',params:{qcBatchId:row.qcBatchId,params:obj}})
+      // },
       download (data) {
         let url = window.URL.createObjectURL(new Blob([data.data]))
         let link = document.createElement('a')
@@ -290,6 +363,14 @@
         link.setAttribute('download', str)
         document.body.appendChild(link)
         link.click()
+      },
+      IEDown(data){
+        let time = (new Date()).getTime()
+        let str = '次品处理('+time+').xlsx'
+        var winname = window.open('', '_blank', 'top=10000');
+        winname.document.open('application/vnd.ms-excel', 'export excel');
+        window.navigator.msSaveBlob(data.data,str);
+        winname.close();
       }
     },
     computed:{
@@ -309,13 +390,12 @@
 
         return {
           businTypeId,
-          finalResult: this.finalResTypeKey,
-          qcBatchId: this.qcBatchIdValue.trim(),
+          clientId: this.clientId.trim(),
+          branchName: this.branchName.trim(),
           batchEndTime: this.batchEndTime,
           batchStartTime: this.batchStartTime,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize,
-          isReBatch: this.isReBatch
+          pageSize: this.pageSize,
         }
       }
     },
@@ -334,6 +414,7 @@
 </script>
 
 <style lang="less" scoped>
+    @import '~style/varible.less';
     .defective-query{
         width: 90%;
         margin:0 auto;
@@ -401,6 +482,19 @@
             width: 100%;
             background: #fff;
             padding: 20px 10px 10px;
+
+            .batchId-box{
+              width: 100%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .blue{
+              color:@color-blue;
+              cursor: pointer;
+              text-decoration: underline;
+            }
 
             .btn{
                 text-align: left;

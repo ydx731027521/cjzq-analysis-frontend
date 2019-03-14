@@ -1,15 +1,16 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import { store } from './store/index'
+import {
+  store
+} from './store/index'
 import ElementUI from 'element-ui'
-// import axios from "axios"
 import axios from './axios'
-// import './mock/index'
 import 'style/element-change.less'
-// import 'element-ui/lib/theme-chalk/index.css'
 import 'style/global.less'
-import { constantRouterMap } from './router/router'
+import {
+  constantRouterMap
+} from './router/router'
 import _ from 'lodash'
 
 import util from 'tools/util'
@@ -35,15 +36,29 @@ Vue.use(ElementUI)
 // 保证刷新不丢失路由
 util.initRoutes(constantRouterMap, router, store)
 
-let registerRouteFresh = true
+let flag = true
 router.beforeEach((to, from, next) => {
+  let user = util.getSession()
   let routes = JSON.parse(sessionStorage.getItem('routes'))
-  if (routes && registerRouteFresh) {
-    router.addRoutes(routes)
-    registerRouteFresh = false
-    next(to.path)
+  // sessionStorage.setItem('path', JSON.stringify(from.path))
+
+  if (to.path != '/log') {
+    if (!user) {
+      // ElementUI.Message.error('请先登录');
+      next('/log')
+    }else{
+      if(flag){
+        router.addRoutes(routes)
+        flag = false
+        next({...to,replace:true})
+      }
+      next()
+    }
+  } else {
+    // next({...to,replace:true})
+    next()
   }
-  next()
+
 })
 
 new Vue({
@@ -51,4 +66,3 @@ new Vue({
   store,
   render: h => h(App)
 }).$mount('#app')
-

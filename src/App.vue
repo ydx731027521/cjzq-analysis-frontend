@@ -16,7 +16,7 @@
           this.$router.addRoutes(routes)
         }
       })
-    }
+    },
   }
 </script>
 

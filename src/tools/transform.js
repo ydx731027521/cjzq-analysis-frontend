@@ -228,3 +228,150 @@ export const qcStatusTransToNum = function (val) {
   }
   return number
 }
+
+// 日志级别的转换
+export const logLevelToNum = function (val) {
+  let number
+  switch (val) {
+    case "error":
+      number = '1'
+      break;
+    case "info":
+      number = '2'
+      break;
+    case "debug":
+      number = '3'
+      break;
+    default:
+      number = '';
+      break;
+  }
+  return number
+}
+
+// 日志类型的转换
+export const logTypeToNum = function (val) {
+  let number
+  switch (val) {
+    case "参数记录":
+      number = '0'
+      break;
+    case "逻辑异常日志":
+      number = '1'
+      break;
+    case "系统异常日志":
+      number = '2'
+      break;
+    case "执行时间记录":
+      number = '-1'
+      break;
+    case "成功":
+      number = '3'
+      break;
+    default:
+      number = '';
+      break;
+  }
+  return number
+}
+
+// 权限的转换
+// "EXAMINE_MANAGE" : "质检标准审核",
+//       "CONFIG_MANAGE" : "配置管理",
+//       "REINSPECTION_MANAGEMENT" : "复检管理",
+//       "PERIODIC_CONFIGURATION" : "周期配置",
+//       "SPOTCHECK_MANAGEMENT" : "抽检管理",
+//       "BATCH_MANAGEMENT" : "批次管理",
+//       "DEFECTIVE_MANAGEMENT" : "次品处理"
+export const authorityTran = function (val) {
+  let str = ''
+  switch (val) {
+    case "EXAMINE_MANAGE":
+      str = '质检标准审核'
+      break;
+    case "CONFIG_MANAGE":
+      str = '配置管理'
+      break;
+    case "REINSPECTION_MANAGEMENT":
+      str = '复检管理'
+      break;
+    case "PERIODIC_CONFIGURATION":
+      str = '周期配置'
+      break;
+    case "SPOTCHECK_MANAGEMENT":
+      str = '抽检管理'
+      break;
+    case "BATCH_MANAGEMENT":
+      str = '批次管理'
+      break;
+    case "DEFECTIVE_MANAGEMENT":
+      str = '次品处理'
+      break;
+    case "LOG_MANAGEMENT":
+      str = '日志管理'
+      break;
+  }
+  return str
+}
+
+// 行为类型的转换
+export const actionTypeToNum = function (val) {
+  let number
+  switch (val) {
+    case "激活":
+      number = '0'
+      break;
+    case "锁定":
+      number = '1'
+      break;
+    case "状态生效":
+      number = '2'
+      break;
+    case "质检周期":
+      number = '3'
+      break;
+    case "质检状态":
+      number = '4'
+      break;
+    case "新增人工批次":
+      number = '5'
+      break;
+    case "生成质检报告":
+      number = '6'
+      break;
+    case "查看次品详情":
+      number = '7'
+      break;
+    case "次品列表导出":
+      number = '8'
+      break;
+    case "将单个次品处理为特殊次品":
+      number = '9'
+      break;
+    case "特殊次品文件导入":
+      number = '10'
+      break;
+    case "批次跑批":
+      number = '11'
+      break;
+    case "新增抽检批次":
+      number = '12'
+      break;
+    case "激活/锁定用户":
+      number = '13'
+      break;
+    case "修改用户权限":
+      number = '14'
+      break;
+    case "登陆成功":
+      number = '15'
+      break;
+    case "特殊次品导入":
+      number = '101'
+      break;
+    default:
+      number = '';
+      break;
+  }
+  return number
+}

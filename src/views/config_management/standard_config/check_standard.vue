@@ -2,7 +2,7 @@
 
     <div class="standard">
         <div class="standard-box">
-            <div class="standard-select">
+            <!-- <div class="standard-select">
                 <span>业务类型:</span>
                 <el-select v-model="businessTypeValue" size="small" @change="handleTypeChange">
                     <el-option
@@ -35,8 +35,8 @@
                             :value="item.businName">
                     </el-option>
                 </el-select>
-            </div>
-            <div class="standard-status">
+            </div> -->
+            <!-- <div class="standard-status">
                 <span>状态:</span>
                 <el-select v-model="statusValue" size="small" @change="handleStatusChange">
                     <el-option
@@ -49,16 +49,38 @@
             </div>
             <div class="standard-search">
                 <el-button type="primary" size="small" class="standard-search-btn" @click="handleSearch"><i class="el-icon-search"></i></el-button>
-            </div>
+            </div> -->
         </div>
         <!-- 表格 -->
         <div class="standard-table">
             <!-- 按钮 -->
-            <div class="opt">
-                <el-button plain type="primary" @click="handleInsert" ><i class="el-icon-plus">新增</i></el-button>
-                <el-button plain type="primary" @click="handleCopy"><i class="el-icon-document">复制</i></el-button>
-                <el-button plain v-if='isPassShow' :class="statusFlag?'':'disable'" @click="handlePass" type="primary"><i class="el-icon-service">审核确认</i></el-button>
-            </div>
+            <el-row class="opt">
+                <!-- <el-button v-if='isOptShow' plain type="primary" @click="handleInsert" ><i class="el-icon-plus">新增</i></el-button> -->
+                <!-- <el-button v-if='isOptShow' plain type="primary" @click="handleCopy"><i class="el-icon-document">复制</i></el-button>
+                <el-button plain v-if='isPassShow' :class="statusFlag?'':'disable'" @click="handlePass" type="primary"><i class="el-icon-service">审核确认</i></el-button> -->
+                <el-col :span="12" align="left">
+                    <el-button size="small" v-if='isOptShow' plain type="primary" @click="handleCopy"><i class="el-icon-document">复制</i></el-button>
+                    <el-button size="small" plain v-if='isPassShow' :class="statusFlag?'':'disable'" @click="handlePass" type="primary"><i class="el-icon-service">审核确认</i></el-button>
+                </el-col>
+                <el-col :span="12" align="right">
+                  <el-row align="right">
+                    <el-col :span="24" align="right">
+                        <span>状态: </span>
+                        <el-select v-model="statusValue" size="small" @change="handleStatusChange" style="margin-right:20px">
+                            <el-option
+                                    v-for="item in status"
+                                    :key="item.type"
+                                    :value="item.desc"
+                                    :label="item.desc">
+                            </el-option>
+                        </el-select>
+                         <el-button type="primary" size="small" class="standard-search-btn" @click="handleSearch"><i class="el-icon-search"></i></el-button>
+                    </el-col>
+                  </el-row>
+                    
+                </el-col>
+                
+            </el-row>
             <!-- 表格 -->
             <el-table
                     :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
@@ -69,7 +91,7 @@
                     border
                     stripe
                     @selection-change="handleSelectionChange"
-                    size="medium">
+                    size="small">
                 <el-table-column
                         type="selection"
                         width="35">
@@ -81,7 +103,7 @@
                         width="50"
                         align="center">
                 </el-table-column>
-                <el-table-column
+                <!-- <el-table-column
                         prop="businKind"
                         label="业务类型"
                         width="200"
@@ -92,12 +114,22 @@
                         label="二级分类"
                         width="200"
                         align="center">
+                </el-table-column> -->
+                <el-table-column
+                        prop="levelOneName"
+                        label="一级业务"
+                        width="120"
+                        align="center">
                 </el-table-column>
                 <el-table-column
                         prop="businName"
-                        label="三级分类"
-                        width="200"
+                        label="业务名称"
                         align="center">
+                        <template slot-scope="{row}">
+                          <span>{{row.businSubKind}}</span> 
+                          <span v-if="row.businSubKind">→</span>  
+                          <span>{{row.businName}}</span>
+                        </template>
                 </el-table-column>
                 <el-table-column
                         prop="qcStandardVersion"
@@ -107,7 +139,7 @@
                 </el-table-column>
                 <el-table-column
                         label="状态"
-                        width="100"
+                        width="60"
                         align="center">
                     <template slot-scope="{row}">
                         <span v-if="row.effectFlag==='生效中'" class="effect">{{row.effectFlag}}</span>
@@ -119,30 +151,34 @@
                 <el-table-column
                         prop="beginDate"
                         label="生效日期"
-                        width="120"
+                        width="100"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         v-if="isNoUse"
                         prop="endDate"
                         label="失效日期"
-                        width="120"
+                        width="100"
                         align="center">
                 </el-table-column>
                 <el-table-column
                         label="操作"
+                        width="50"
                         align="center">
                     <template scope="{row,$index}">
-                        <span @click="handleDetail(row,$index)" class="blue">详情</span>
+                        <!-- <span @click="handleDetail(row,$index)" class="blue">详情</span> -->
+                
+                        <router-link tag="a" target="_blank" :to="{name:'业务详情',params:{id:row.qcStandardId,effectFlag:row.effectFlag,businTypeId:businId}}" class="blue text">详情</router-link>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
         <!-- 分页组件 -->
         <Pagination
+                v-if="total!=0"
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </Pagination>
@@ -158,11 +194,17 @@
   import {mapState} from 'vuex'
   import CONSTANT from 'api/constant'
   import {checkTransformToNum} from 'tools/transform'
-  let {REVIEW} = CONSTANT
-  let {STANDARD_CONFIG_LIST,STANDARD_CONFIG_SEARCH,STANDARD_FIRSTCLASS,STANDARD_SECONDCLASS,STANDARD_CONFIG_PASS,STANDARD_CONFIG_COPY,STANDARD_STATUS} = URL
+
+  let {REVIEW,ESSANTIAL_OPT} = CONSTANT
+  let {STANDARD_CONFIG_SEARCH,STANDARD_BUSIN,STANDARD_CONFIG_PASS,STANDARD_CONFIG_COPY,STANDARD_STATUS} = URL
   export default {
     name:'checkStandard',
     components:{Pagination,InsertDialog},
+    props:{
+      businId:{
+        type:String
+      }
+    },
     data(){
       return {
         detailDialogData:{},
@@ -174,10 +216,9 @@
         allTableData:[],
         standardTableData:[],
         detailList:[],
-        businessType:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         businessTypeValue:'',
         secondClassValue:'',
         thirdClassValue:'',
@@ -198,42 +239,53 @@
         ],
         status:[],
         multipleSelection: [],
-        isNoUse:false
+        isNoUse:false,
+        businTypeId:'',
+        busin_id:'',
+        isCopy:false
       }
-    },
-    beforeRouteLeave(to, from, next) {
-      from.meta.keepAlive = false;
-      next();
     },
     mounted(){
-      this.businessTypeValue = "所有"
-      this.secondClassValue = "所有"
-      this.thirdClassValue = "所有"
-      util.getBusin(this,'businessType','1',true)
+      // this.businTypeId = this.businId
+      // this.businessTypeValue = "所有"
+      // this.secondClassValue = "所有"
+      // this.thirdClassValue = "所有"
+      // let _this = this
+      // let {isInsert,params} = this.$route.params
       this._getStatus()
-      let {isInsert} = this.$route.params
-
-      if(isInsert){
-        this.statusValue = '待审核'
-        this.effectFlag = '1'
-        this._search()
-      }else{
-        this.statusValue = "生效中"
-        this.effectFlag = '2'
-        this._getList()
-      }
+      // if(params){
+      //   let keyList = Object.keys(params)
+      //   keyList.map(item=>{
+      //     _this[item] = params[item]
+      //   })
+      // }else{
+      //   util.getBusin(this,'businessType','1',true)
+      // }
+      // if(isInsert){
+      //   this.statusValue = '待审核'
+      //   this.effectFlag = '1'
+      //   this._search()
+      // }else{
+      //   if(!params){
+      //     this.statusValue = "生效中"
+      //     this.effectFlag = '2'
+      //   }
+      // }
+      this.statusValue = "生效中"
+      this.effectFlag = '2'
+      // this._getList(this.params)
     },
     methods:{
       _copyMap(arr){
         let list = []
-        arr.map((item,index)=>{
+        arr.map((item)=>{
           list.push(item.qcStandardId)
         })
         return list
       },
       _passMap(arr){
         let list = []
-        arr.map((item,index)=>{
+        arr.map((item)=>{
           let obj = {}
           obj.id = item.qcStandardId
           obj.effectFlag = item.effectFlag
@@ -247,9 +299,11 @@
           let {data} = res
           if(res.status === 200 && data.status==0){
             this.effectFlag = '2'
+            this.statusValue = '生效中'
             this.statusFlag = false
-            this._getList()
+            this._getList({...this.params,businTypeId:this.businId})
             util.success(data.message)
+            // this.isCopy = false
           }else{
             this.$message.error(data.message)
           }
@@ -267,9 +321,9 @@
           }
         })
       },
-      _search(){
+      _search(obj){
         this.currentPage = 1
-        this._getList()
+        this._getList(obj)
       },
       _getStatus(){
         this.$http.get(STANDARD_STATUS).then(res=>{
@@ -279,50 +333,56 @@
           }
         })
       },
-      _getList(){
+      _getList(params){
         this.loading = true
-        let businessTypeId = this.businessTypeValue == "所有"?"":this.businessTypeId
-        let secondClassId = this.secondClassValue == "所有"?"":this.secondClassId
-        let thirdClassId = this.thirdClassValue == "所有"?"":this.thirdClassId
-        let obj = {
-          currentPage:this.currentPage,
-          pageSize:this.currentPageSize,
-          effectFlag:this.effectFlag
-        }
-        if(businessTypeId&&!secondClassId&&!thirdClassId){
-          obj.businTypeId = businessTypeId
-        }else if(businessTypeId&&secondClassId&&!thirdClassId){
-          obj.businTypeId = secondClassId
-        }else{
-          obj.businTypeId = thirdClassId
-        }
-
-        this.$http.post(STANDARD_CONFIG_SEARCH, obj).then(res=>{
+        this.$http.post(STANDARD_CONFIG_SEARCH, params).then(res=>{
           if (res.status === 200 && res.data.status == 0) {
             let { data } = res.data
-            util.formatVersionArr(data.items)
-            this.standardTableData = data.items
+            if(data){
+              util.formatVersionArr(data.items)
+              this.standardTableData = data.items
+              this.total = data.totalNum
+            }
             this.loading = false
-            this.total = data.totalNum
+          }else{
+            util.err(res.data.message)
           }
         })
       },
       handleChangeCurrentPageSize(val){
-        this.currentPageSize = val
+        this.pageSize = val
         this.currentPage = 1
-        this._getList()
-        util.wrapToTop(this)
+        this._getList({...this.params,businTypeId:this.businId})
+        // util.wrapToTop(this)
       },
       handleChangeCurrentPage(val){
         this.currentPage = val
-        this._getList()
-        util.wrapToTop(this)
+        this._getList({...this.params,businTypeId:this.businId})
+        // util.wrapToTop(this)
       },
       handleDetail(row,index){
         let {qcStandardId,effectFlag} = row
+        let obj = {
+          ...this.params,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          statusValue:this.statusValue,
+          businTypeId:this.businTypeId,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassId,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          statusValue:this.statusValue,
+          statusFlag:this.statusFlag
+        }
+        this.$emit('detialClick',qcStandardId,effectFlag)
         this.$router.push({name:'质检标准详情',params:{
             id:qcStandardId,
-            effectFlag
+            effectFlag,
+            params:obj
           }})
       },
       handleClose(done) {
@@ -333,7 +393,25 @@
           .catch(_ => {})
       },
       handleInsert(){
-        this.$router.push('/essantial/insert')
+        let obj = {
+          ...this.params,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          statusValue:this.statusValue,
+          businTypeId:this.businTypeId,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassId,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          statusValue:this.statusValue,
+          statusFlag:this.statusFlag
+        }
+        this.$router.push({name:'新增质检标准',params:{
+            params:obj
+          }})
       },
       handleSearch(){//搜索
         if(this.statusValue === '待审核'){
@@ -346,9 +424,9 @@
           this.statusFlag = false
           this.isNoUse = false
         }
-        console.log(this.statusValue)
-        console.log(this.isNoUse)
-        this._search()
+        this.currentPage = 1
+        let obj = {...this.params,businTypeId:this.businId}
+        this._search(obj)
       },
       handleStatusChange(val){
         this.statusValue = val
@@ -367,11 +445,15 @@
         util.thirdClassChange(this, this.thirdClassValue, val)
       },
       handleCopy(){
-        if(this.multipleSelection.length>0){
-          this._copy(this.multipleSelection)
-        }else{
-          this.$message.error('请选择需要复制的业务')
-        }
+        // if(!this.isCopy){
+          // this.isCopy = true
+          if(this.multipleSelection.length>0){
+            this._copy(this.multipleSelection)
+            this.multipleSelection = []
+          }else{
+            this.$message.error('请选择需要复制的业务')
+          }
+        // }
       },
       handleSelectionChange(val){
         this.multipleSelection = val
@@ -385,6 +467,14 @@
         }else{
           util.error('请选择待审核业务')
         }
+      },
+      parentRefresh(id){
+        let obj = {...this.params,businTypeId:id}
+        this._search(obj)
+      },
+      parentSearch(id){
+        let obj = {...this.params,businTypeId:id}
+        this._search(obj)
       }
     },
     computed:{
@@ -392,10 +482,47 @@
         'authorityList':state=>state.user.authorityList
       }),
       isPassShow(){
-        if(this.authorityList.indexOf(REVIEW)>0)
+        if(this.authorityList.indexOf(REVIEW)>=0||this.authorityList.indexOf('ADMIN')>=0)
           return true
         else
           return false
+      },
+      isOptShow(){
+        if(this.authorityList.indexOf(ESSANTIAL_OPT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
+      params(){
+        // let businessTypeId = this.businessTypeValue == "所有"?"":this.businessTypeId
+        // let secondClassId = this.secondClassValue == "所有"?"":this.secondClassId
+        // let thirdClassId = this.thirdClassValue == "所有"?"":this.thirdClassId
+        // let businTypeId = ''
+
+        // if(businessTypeId&&!secondClassId&&!thirdClassId){
+        //   businTypeId = businessTypeId
+        // }else if(businessTypeId&&secondClassId&&!thirdClassId){
+        //   businTypeId = secondClassId
+        // }else{
+        //   businTypeId = thirdClassId
+        // }
+        // this.businTypeId = businTypeId
+
+        return {
+          businTypeId:this.busin_id,
+          currentPage:this.currentPage,
+          pageSize:this.pageSize,
+          effectFlag:this.effectFlag
+        }
+      }
+    },
+    watch:{
+      businId:{
+        handler(val,oldVal){
+          this.busin_id = val
+          this._getList({...this.params,businTypeId:this.businId})
+        },
+        deep:true
       }
     }
   }
@@ -404,7 +531,7 @@
 <style lang="less" scoped>
     @import '~style/varible.less';
     .standard{
-        width: 90%;
+        width: 96%;
         margin:0 auto;
 
         .standard-box{
@@ -413,7 +540,6 @@
             overflow: hidden;
             position: relative;
             background: #fff;
-            padding: 10px;
 
             .standard-select,.first-class,.second-class,.standard-status{
                 float: left;
@@ -455,7 +581,6 @@
             margin: 0 auto;
             margin-top: 20px;
             background: #fff;
-            padding: 10px;
 
             .effect{
                 color:@color-effect;

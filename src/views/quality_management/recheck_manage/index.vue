@@ -52,7 +52,7 @@
             </div>
             <div class="recheck-item">
                 <div class="item-left">
-                    <span>复检结果：</span>
+                    <span>最终结果：</span>
                 </div>
                 <div class="item-right">
                     <el-select v-model="finalResTypeValue" size="small" @change="handleFinalResChange">
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="date-pick">
-                <span>复检时间：</span>
+                <span>质检时间：</span>
                 <el-date-picker
                         v-model="dateValue"
                         type="daterange"
@@ -88,27 +88,29 @@
         </div>
         <div class="recheck-table">
             <el-table
+                    v-loading="loading"
                     :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
                     :data="tableData"
                     stripe
                     border
                     style="width: 100%">
                 <el-table-column
-                        fixed="left"
                         type="index"
                         label="序号"
                         align="center"
                         width="50">
                 </el-table-column>
                 <el-table-column
-                        fixed="left"
                         prop="bussine"
                         label="业务类型"
                         align="center"
                         width="350">
+                        <template slot-scope="{row}">
+                            <span v-if="row.finalResult!=null&&row.finalResult!='复检中'" class="blue text" @click="handleShowDetail(row)">{{row.bussine}}</span>
+                            <span v-else>{{row.bussine}}</span>
+                        </template>
                 </el-table-column>
                 <el-table-column
-                        fixed="left"
                         prop="qcBatchName"
                         align="center"
                         width="300"
@@ -124,25 +126,23 @@
                         prop="finalUneligAmount"
                         align="center"
                         width="140"
-                        label="复检不合格订单数">
+                        label="最终不合格订单数">
                 </el-table-column>
                 <el-table-column
-                        prop="reExaminationCount"
+                        prop="reBatchCount"
                         align="center"
                         width="80"
                         label="复检次数">
-                    <template slot-scope="{row}">
-                        <span class="count" @click="handleDetailShow(row)">{{row.reExaminationCount}}</span>
-                    </template>
                 </el-table-column>
                 <el-table-column
                         align="center"
                         width="100"
-                        label="复检结果">
+                        label="最终结果">
                     <template slot-scope="{row}">
                         <span class="qualified" v-if="row.finalResult === '合格'">{{row.finalResult}}</span>
                         <span class="unqualified" v-if="row.finalResult === '不合格'">{{row.finalResult}}</span>
                         <span class="recheck" v-if="row.finalResult === '复检中'">{{row.finalResult}}</span>
+                        <span class="unusual" v-if="row.finalResult == null">异常</span>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -162,82 +162,25 @@
                     </template>
                 </el-table-column>
                 <el-table-column
+                        v-if="isRecheckShow"
+                        fixed='right'
                         align="center"
                         label="操作">
                     <template slot-scope="{row}">
-                        <span v-if="row.finalResult == 1" class="blue" @click="handleAddRecheck(row)">复检</span>
+                        <span v-if="row.finalResult == '不合格'&&row.isReBatch != true" class="blue" @click="handleAddRecheck(row)">复检</span>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
         <!-- 分页 -->
         <pagination
+                v-if="total!=0"
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </pagination>
-        <!-- 复检次数弹窗 -->
-        <div class="delete-box">
-            <el-dialog
-                    :close-on-click-modal=false
-                    :close-on-press-escape=false
-                    title="复检详情"
-                    :visible.sync="recheckDialogVisible"
-                    width="70%">
-                <div class="recheck-box">
-                    <el-table
-                            v-loading="detail_loading"
-                            :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
-                            :data="detailTableData"
-                            style="width: 100%"
-                            border
-                            stripe>
-                        <el-table-column
-                                label="序号"
-                                type="index"
-                                width="80"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                label="复检编号"
-                                width="350"
-                                align="center">
-                            <template slot-scope="{row}">
-                                <span class="blue text" @click="handleIdClick(row)">{{row.id}}</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column
-                                prop="orderAmount"
-                                label="复检订单总数"
-                                width="150"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="finalUneligAmount"
-                                label="复检订单不合格数"
-                                width="150"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="creatTime"
-                                label="创建时间"
-                                width="200"
-                                align="center">
-                        </el-table-column>
-                        <el-table-column
-                                prop="reExaminationCount"
-                                label="复检次数"
-                                align="center">
-                        </el-table-column>
-                    </el-table>
-                </div>
-                <span slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="recheckDialogVisible = false">关 闭</el-button>
-          </span>
-            </el-dialog>
-        </div>
     </div>
 </template>
 
@@ -246,7 +189,10 @@
   import {finalResultTrans,finalResultTransToNum} from 'tools/transform'
   import util from 'tools/util'
   import URL from 'api/url'
-  let {CONVENTION_BATCH_AND_STATUS,RECHECK_LIST,RECHECK_ADD} = URL
+  import CONSTANT from 'api/constant'
+  import {mapState} from 'vuex'
+  let {RECHECK} = CONSTANT
+  let {CONVENTION_BATCH_AND_STATUS,RECHECK_LIST,RECHECK_ADD,RECHECK_DETAIL_LIST} = URL
 
   export default {
     name:'demo',
@@ -270,7 +216,7 @@
         dateValue:'',
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         recheckDialogVisible:false,
         finalResTypeValue:'所有',
         finalResTypeKey:'',
@@ -282,42 +228,45 @@
             "key": "",
             "value": "所有"
           },
-          {
-            "key": "",
-            "value": "复检中"
-          },
         ],
         tableData:[],
-        detailTableData:[]
+        detailTableData:[],
+        businTypeId:''
       }
     },
     mounted(){
       this.businessTypeValue = "所有"
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
-      util.getBusin(this,'businessType','1',true)
-      util.getBatchInfo(this,'finalResType')
+      let {params} = this.$route.params
+      if(params){
+          let keyList = Object.keys(params)
+        keyList.map(item=>{
+            this[item] = params[item]
+        })
+      }else{
+        util.getBusin(this,'businessType','1',true)
+        util.getBatchInfo(this,'finalResType')
+      }
       this._getList(this.params)
     },
-    beforeRouteLeave(to, from, next) {
-      from.meta.keepAlive = false;
-      next();
-    },
+    
     methods: {
       _getList(params){
         this.loading = true
         this.$http.post(RECHECK_LIST,params).then(res=>{
           if (res.status === 200 && res.data.status === 0) {
             let { data } = res.data
-            util.formatBussine(data.items,'bussine')
-            finalResultTrans(data.items)
-            this.tableData = data.items
-            this.total = data.totalNum
+            if(data){
+              util.formatBussine(data.items,'bussine')
+              finalResultTrans(data.items)
+              this.tableData = data.items
+              this.total = data.totalNum
+            }
             this.loading = false
+          }else{
+            util.error(res.data.message)
           }
-        }).catch(err => {
-          util.error('服务器错误，请稍后再试')
-          console.log(err)
         })
       },
       _addRecheck(id){
@@ -327,13 +276,12 @@
           let {data} = res
           if(res.status === 200 && res.data.status === 0){
             util.success(data.message)
-            this._getList()
+            this._getList(this.params)
           }else{
             util.error(data.message)
           }
         }).catch(err => {
           util.err()
-          console.log(err)
         })
       },
       handleTypeChange(val){
@@ -355,18 +303,13 @@
       handleChangeCurrentPageSize(val){
         util.wrapToTop(this)
         this.currentPage = 1
-        this.currentPageSize = val
+        this.pageSize = val
         this._getList(this.params)
       },
       handleChangeCurrentPage(val){
         util.wrapToTop(this)
         this.currentPage = val
         this._getList(this.params)
-      },
-      handleIdClick(row){
-        let {id,originalQcBatchId} = row
-        this.recheckDialogVisible = false
-        this.$router.push({name:'复检详情',params:{qcBatchId:id,originalQcBatchId}})
       },
       handleDetailShow(row){
         this.recheckDialogVisible = true
@@ -386,7 +329,39 @@
         }else{
           this.isReBatch = true
         }
-      }
+      },
+      handleShowDetail(row){
+        let {originalQcBatchId} = row
+
+        let obj = {
+          batchEndTime: this.batchEndTime,
+          batchStartTime: this.batchStartTime,
+          currentPage: this.currentPage,
+          pageSize: this.pageSize,
+          isReBatch: this.isReBatch,
+          finalResTypeKey:this.finalResTypeKey,
+          qcBatchIdValue:this.qcBatchIdValue,
+          businTypeId:this.businTypeId,
+          dateValue:this.dateValue,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.secondClassValue,
+          businessTypeId:this.businessTypeId,
+          secondClassId:this.secondClassId,
+          thirdClassId:this.thirdClassId,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          finalResType:this.finalResType,
+          finalResTypeValue:this.finalResTypeValue
+        }
+
+        this.$router.push({name:'批次管理详情',params:{
+            id:originalQcBatchId,
+            isReBatch:true,
+            params:obj
+          }})
+      },
     },
     computed:{
       params(){
@@ -410,10 +385,19 @@
           batchEndTime: this.batchEndTime,
           batchStartTime: this.batchStartTime,
           currentPage: this.currentPage,
-          pageSize: this.currentPageSize,
+          pageSize: this.pageSize,
           isReBatch: this.isReBatch
         }
-      }
+      },
+      ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isRecheckShow(){
+        if(this.authorityList.indexOf(RECHECK)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
     },
     watch:{
       dateValue(val,oldval){
@@ -531,6 +515,20 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+
+            .text{
+                text-decoration: underline;
+            }
+
+            .blue{
+                color: @color-blue;
+                cursor: pointer;
+            }
+
+            .unusual{
+                color: @color-unusual;
+                font-weight: 700;
             }
         }
 

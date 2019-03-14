@@ -3,7 +3,9 @@
     <div class="detail-box">
         <div class="detail-header">
             <span>批次详情</span>
-            <el-button type="primary" @click='handleExport'>生成质检报告</el-button>
+            <el-button type="primary" @click='handleExport' v-if="isExportShow&&!isReBatch">生成质检报告</el-button>
+            <el-button type="primary" @click='handleExport' v-if="isExportShow&&isReBatch">生成复检报告</el-button>
+            <el-button type="primary" plain @click='handleGoBack'>返 回</el-button>
         </div>
         <div class="result-box">
             <div class="left">
@@ -113,7 +115,7 @@
             <div class="collapse">
                 <div class="collapse-borderbox">
                     <el-collapse v-model="activeNames" @change="handleCollClick">
-                        <el-collapse-item :title="collapseTitle?'点击收起质检要件':'点击展开质检要件'" name="list" class="collapse-item">
+                        <el-collapse-item :title="collapseTitle?'点击展开质检要件':'点击收起质检要件'" name="list" class="collapse-item">
                             <el-table
                                     v-loading="loading"
                                     :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
@@ -123,37 +125,30 @@
                                 <el-table-column
                                         label="序号"
                                         type="index"
-                                        min-width="10%"
+                                        width="50"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="markTypeName"
                                         label="要件类型"
-                                        min-width="10%"
+                                        width="100"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="markItemName"
                                         label="要件名称"
-                                        min-width="20%"
-                                        align="center">
-                                </el-table-column>
-                                <el-table-column
-                                        prop="markParam"
-                                        label="要件参数"
-                                        min-width="15%"
+                                        width="200"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
                                         prop="orderFilter"
                                         label="筛选条件"
-                                        min-width="35%"
+                                        width="140"
                                         align="center">
                                 </el-table-column>
                                 <el-table-column
-                                        prop="markDim"
-                                        label="筛选维度"
-                                        min-width="10%"
+                                        prop="qcRule"
+                                        label="质检规则"
                                         align="center">
                                 </el-table-column>
                             </el-table>
@@ -161,12 +156,63 @@
                             <pagination
                                     :total="total"
                                     :currentPage="currentPage"
-                                    :currentPageSize="currentPageSize"
+                                    :pageSize="pageSize"
                                     @changeCurrentPageSize="handleChangeCurrentPageSize($event,'')"
                                     @changeCurrentPage="handleChangeCurrentPage($event,'')">
                             </pagination>
                         </el-collapse-item>
                     </el-collapse>
+                </div>
+            </div>
+
+            <div class="title"><i class="icon-fujianliebiao"></i>复检列表</div>
+            <div class="list-info">
+                <div class="table-box">
+                    <el-table
+                            v-loading="list_loading"
+                            :header-cell-style="{'background':'#E8E8E8','color':'black','font-weight':'800'}"
+                            :data="listTableData"
+                            style="width: 100%"
+                            border
+                            stripe>
+                        <el-table-column
+                                label="序号"
+                                type="index"
+                                width="80"
+                                align="center">
+                        </el-table-column>
+                        <el-table-column
+                                label="复检编号"
+                                width="350"
+                                align="center">
+                            <template slot-scope="{row}">
+                                <span class="blue text">{{row.id}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                prop="orderAmount"
+                                label="复检订单总数"
+                                width="150"
+                                align="center">
+                        </el-table-column>
+                        <el-table-column
+                                prop="uneligAmount"
+                                label="复检订单不合格数"
+                                width="150"
+                                align="center">
+                        </el-table-column>
+                        <el-table-column
+                                prop="creatTime"
+                                label="创建时间"
+                                width="200"
+                                align="center">
+                        </el-table-column>
+                        <el-table-column
+                                prop="reExaminationCount"
+                                label="复检次数"
+                                align="center">
+                        </el-table-column>
+                    </el-table>
                 </div>
             </div>
         </div>
@@ -175,34 +221,34 @@
             <div class="tab-box">
                 <el-tabs v-model="activeTab" @tab-click="handleChangeTab">
                     <el-tab-pane label="全部" name="all">
-                        <TableAll :data="all_data" :headerList="headerList" ref="all"></TableAll>
+                        <TableAll :data="all_data" :headerList="headerList" ref="all" :isReBatch='isReBatch' @handleMissing="handleMissingChange"></TableAll>
                         <!-- 所有分页 -->
                         <pagination
                                 :total="all_total"
                                 :currentPage="all_currentPage"
-                                :currentPageSize="all_currentPageSize"
+                                :pageSize="all_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'all_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'all_')">
                         </pagination>
                     </el-tab-pane>
                     <el-tab-pane label="仅合格订单" name="qualified">
-                        <TableAll :data="qualified_data" :headerList="headerList" ref="qualified"></TableAll>
+                        <TableAll :data="qualified_data" :headerList="headerList" ref="qualified" :isReBatch='isReBatch' @handleMissing="handleMissingChange"></TableAll>
                         <!-- 所有分页 -->
                         <pagination
                                 :total="qualified_total"
                                 :currentPage="qualified_currentPage"
-                                :currentPageSize="qualified_currentPageSize"
+                                :pageSize="qualified_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'qualified_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'qualified_')">
                         </pagination>
                     </el-tab-pane>
                     <el-tab-pane label="仅不合格订单" name="unqualified">
-                        <TableAll :data="unqualified_data" :headerList="headerList" ref="unqualified"></TableAll>
+                        <TableAll :data="unqualified_data" :headerList="headerList" ref="unqualified" :isReBatch='isReBatch' @handleMissing="handleMissingChange"></TableAll>
                         <!-- 所有分页 -->
                         <pagination
                                 :total="unqualified_total"
                                 :currentPage="unqualified_currentPage"
-                                :currentPageSize="unqualified_currentPageSize"
+                                :pageSize="unqualified_pageSize"
                                 @changeCurrentPageSize="handleChangeCurrentPageSize($event,'unqualified_')"
                                 @changeCurrentPage="handleChangeCurrentPage($event,'unqualified_')">
                         </pagination>
@@ -213,6 +259,31 @@
                 <el-button type='primary' plain @click="handleGoBack">返 回</el-button>
             </div>
         </div>
+
+        <el-dialog
+            :close-on-click-modal=false
+            :close-on-press-escape=false
+            title="提醒"
+            :visible.sync="remarkDialogVisible"
+            append-to-body
+            width="50%"
+            align="center">
+          <el-row :gutter="20">
+            <el-col :span="3" style="text-align:right"><span style="color:red">*</span><span>备注：</span></el-col>
+            <el-col :span="21">
+              <el-input
+                type="textarea"
+                :rows="3"
+                placeholder="请输入内容"
+                v-model="textarea">
+              </el-input>
+            </el-col>
+          </el-row>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="handleMissingChangeCancel">取 消</el-button>
+            <el-button type="primary" @click="handleMissingChangeConfirm">确 定</el-button>
+          </span>
+      </el-dialog>
     </div>
 </template>
 
@@ -223,15 +294,21 @@
   import {conventionResultTrans,checkDim} from 'tools/transform'
   import util from 'tools/util'
   import baseUrl from '../../../setBaseUrl'
-  let {CONVENTION_BATCH_DETAIL,DEFECTIVE_DETAIL_STATIC_LIST,DEFECTIVE_DETAIL_ALL_FLOAT_LIST,DEFECTIVE_EXCEL_DETAIL_EXPORT,CONVENTION_BATCH_DETAIL_LIST} = URL
+  import { Message } from 'element-ui'
+  import {mapState} from 'vuex'
+  import CONSTANT from 'api/constant'
+  let {CONVENTION_DETAIL_EXPORT} = CONSTANT
+  let {CONVENTION_BATCH_DETAIL,DEFECTIVE_DETAIL_STATIC_LIST,DEFECTIVE_DETAIL_ALL_FLOAT_LIST,DEFECTIVE_EXCEL_DETAIL_EXPORT,CONVENTION_BATCH_DETAIL_LIST,RECHECK_DETAIL_LIST,STANDARD_CONFIG_MISSING_ITEM_CHANGE} = URL
   export default {
     name:'batchDetail',
     components:{TableAll,Pagination},
     data(){
       return {
         loading:false,
+        list_loading:false,
+        listTableData:[],
         id:'',
-        activeNames:"",
+        activeNames:"list",
         activeTab:"qualified",
         pageData:{},
         tableData:[],
@@ -239,14 +316,14 @@
         str:"qualified",
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         all_currentPage:1,
-        all_currentPageSize:20,
+        all_pageSize:20,
         all_total:0,
         qualified_currentPage:1,
-        qualified_currentPageSize:20,
+        qualified_pageSize:20,
         unqualified_currentPage:1,
-        unqualified_currentPageSize:20,
+        unqualified_pageSize:20,
         headerList:[
           {prop:'originalOrderId',label:'原始订单号'},
           {prop:'clientId',label:'客户号'},
@@ -268,7 +345,15 @@
         unqualified_total:0,
         unqualified_headerList:[],
         collapseTitle:false,
-        queryData:{}
+        queryData:{},
+        params:{},
+        isReBatch:false,
+        reBatchParams:{},
+        remarkDialogVisible:false,
+        textarea:'',
+        missingItem:{},
+        itemData:{},
+        message:{}
       }
     },
     mounted(){
@@ -276,34 +361,54 @@
       this.qcResult = 0
       this.queryData = this.$route.params
 
-      let {id} = this.queryData
+      let {id,params,isReBatch} = this.queryData
       this.id = id
+      if(isReBatch){
+        this.isReBatch = true
+        this.reBatchParams = params
+      }else{
+        this.params = params
+      }
       this.$http.get(CONVENTION_BATCH_DETAIL,{params:{
-          qcBatchId:id
+        qcBatchId:id
         }}).then(res=>{
-        if(res.status === 200 && res.data.status === 0){
-          let {data} = res.data
+          if(res.status === 200 && res.data.status === 0){
+            let {data} = res.data
           let qcStdVersion = util.formatVersionStr(data.qcStdVersion)
           this.pageData = data
           this.pageData.qcStdVersion = qcStdVersion
           this._initEcharts()
         }
       })
+      this._getReBatchList(id)
       this._getAllData(this.id,this.str)
+      this._getEssantialList()
     },
-    beforeRouteLeave(to, from, next) {
-      if (to.path == "/quality/manage") {
-        to.meta.keepAlive = true;
-      } else {
-        to.meta.keepAlive = false;
-      }
-      next();
-    },
+    // beforeRouteLeave(to, from, next) {
+    //   if (to.path == "/quality/manage") {
+    //     to.meta.keepAlive = true;
+    //   } else {
+    //     to.meta.keepAlive = false;
+    //   }
+    //   next();
+    // },
     methods:{
+      _getReBatchList(id){
+        this.$http.get(RECHECK_DETAIL_LIST,{params:{
+          qcBatchId:id
+        }}).then(res=>{
+          let {data} = res
+          if(res.status === 200 && data.status === 0){
+            this.listTableData = data.data
+          }else{
+            util.error(data.message)
+          }
+        })
+      },
       _getAllData(id,str){
         // 请求固定列
         var currentPage = str+"_currentPage"
-        var pageSize = str+"_currentPageSize"
+        var pageSize = str+"_pageSize"
         var bodyList = str+"_bodyList"
         var leftTableData = str+'_leftTableData'
         var headerList = str+'_headerList'
@@ -384,7 +489,7 @@
         this.loading = true
         this.$http.get(CONVENTION_BATCH_DETAIL_LIST,{params:{
             currentPage:this.currentPage,
-            pageSize:this.currentPageSize,
+            pageSize:this.pageSize,
             qcBatchId:this.id
           }}).then(res=>{
           let {data} = res
@@ -396,16 +501,15 @@
             this.tableData = items
             this.total = totalNum
             this.loading = false
+          }else{
+            util.error(res.data.message)
           }
-        }).catch(err=>{
-          util.err()
-          console.log(err)
         })
       },
       _initEcharts(){
-        let {orderAmount,eligAmount,uneligAmount} = this.pageData
+        let {orderAmount,eligAmount,uneligAmount,finalEligAmount,finalUneligAmount} = this.pageData
         util.initEcharts(this,'result',orderAmount,eligAmount,uneligAmount,'初检结果饼状图')
-        util.initEcharts(this,'final-result',orderAmount,eligAmount,uneligAmount,'最终结果饼状图')
+        util.initEcharts(this,'final-result',orderAmount,finalEligAmount,finalUneligAmount,'最终结果饼状图')
       },
       _getHeaderList(arr){
         if(arr){
@@ -421,6 +525,11 @@
       },
       _export(){
         let token = this.$store.state.user.token
+        this.message = Message({
+            showClose: true,
+            message: '正在导出中...',
+            duration:0
+        })
         axios({
           method: 'get',
           url: baseUrl+DEFECTIVE_EXCEL_DETAIL_EXPORT+'?qcBatchId='+this.id,
@@ -428,11 +537,32 @@
             'Authorization':"Bearer " + token,
             'Content-Type': 'application/json'
           },
-          responseType: 'blob'
+          responseType: 'blob',
+          timeout:1000*60*120,
         }).then(response => {
-          this.download(response)
-        }).catch((error) => {
+          let IEVersion = util.IEVersion()
+          if(IEVersion!=-1){
+            this.IEDown(response)
+          }else{
+            this.download(response)
+          }
+          this.message.close()
+        }).catch((err) => {
+          this.message.close()
           util.err()
+        })
+      },
+      _missingChange(params){
+        this.$http.post(STANDARD_CONFIG_MISSING_ITEM_CHANGE,params).then(res=>{
+          let {data} = res
+          if(res.status === 200&&res.data.status ===0){
+            this.textarea = ''
+            this.remarkDialogVisible = false
+            this._getAllData(this.id,this.str)
+            util.success(data.message)
+          }else{
+            util.error(data.message)
+          }
         })
       },
       handleChangeTab(val){
@@ -452,9 +582,9 @@
         this._getAllData(this.id,this.str)
       },
       handleChangeCurrentPageSize(val,str){
-        let currentPageSize = str + "currentPageSize"
+        let pageSize = str + "pageSize"
         let currentPage = str + "currentPage"
-        this[currentPageSize] = val
+        this[pageSize] = val
         this[currentPage] = 1
         if(!str){
           this._getEssantialList()
@@ -472,26 +602,76 @@
         }
       },
       handleCollClick(){
-        if(!this.collapseTitle)
-          this._getEssantialList()
+        // if(!this.collapseTitle)
+        //   this._getEssantialList()
         this.collapseTitle = !this.collapseTitle
       },
       handleExport(){
         this._export()
       },
       handleGoBack(){
-        this.$router.go(-1)
+        if(this.isReBatch){
+          this.$router.push({name:'复检管理',params:{params:this.reBatchParams}})
+        }else{
+          this.$router.push({name:'批次管理',params:{params:this.params}})
+        }
+      },
+      handleMissingChange(data){
+        this.itemData = data
+        this.remarkDialogVisible = true
+      },
+      handleMissingChangeCancel(){
+        this.textarea = ''
+        this.remarkDialogVisible = false
+      },
+      handleMissingChangeConfirm(){
+        if(this.textarea){
+          let {row,label} = this.itemData
+          let {clientId,origOrderId} = row
+          let {markItemId} = label
+   
+          let params = {
+            batchId:this.id,
+            remark:this.textarea,
+            clientId,
+            origiOrderId:origOrderId,
+            markItemId
+          }
+          this._missingChange(params)
+        }else{
+          util.error('请填写备注')
+        }
       },
       download (data) {
         let url = window.URL.createObjectURL(new Blob([data.data]))
         let link = document.createElement('a')
         link.style.display = 'none'
         link.href = url
-        let str = '质检报告('+this.id+').xlsx'
+        let str = this.isReBatch?'复检报告('+this.id+').xlsx':'质检报告('+this.id+').xlsx'
         link.setAttribute('download', str)
         document.body.appendChild(link)
         link.click()
+      },
+      IEDown(data){
+        let time = (new Date()).getTime()
+        let str = this.isReBatch?'复检报告('+this.id+').xlsx':'质检报告('+this.id+').xlsx'
+        var winname = window.open('', '_blank', 'top=10000');
+        var strHTML = data.data;
+        winname.document.open('application/vnd.ms-excel', 'export excel');
+        window.navigator.msSaveBlob(data.data,str);
+        winname.close();
       }
+    },
+    computed:{
+      ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isExportShow(){
+        if(this.authorityList.indexOf(CONVENTION_DETAIL_EXPORT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
     }
   }
 </script>
@@ -537,6 +717,15 @@
             margin-right: 10px;
         }
 
+        .icon-fujianliebiao{
+            display: inline-block;
+            background-image: url(../../../static/icon-1.png);
+            background-repeat: no-repeat;
+            line-height: 50px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
         .detail-header{
             font-size: 20px;
             line-height: 40px;
@@ -550,6 +739,7 @@
 
             &>button{
                 float: right;
+                margin-right: 10px;
             }
         }
 
@@ -638,7 +828,7 @@
                 }
             }
 
-            .convention-info,.busin-info{
+            .convention-info,.busin-info,.list-info{
                 line-height: 40px;
                 overflow: hidden;
                 margin-bottom: 20px;
@@ -670,6 +860,11 @@
 
                 .w60{
                     width: 60%;
+                }
+
+                .table-box{
+                  padding-top: 10px;
+                  margin-bottom: 10px;
                 }
             }
 

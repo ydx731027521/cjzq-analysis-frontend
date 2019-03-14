@@ -115,12 +115,10 @@
                         align="center">
                 </el-table-column>
                 <el-table-column
+                        prop="originalQcBatchId"
                         label="原批次编号"
                         width="300px"
                         align="center">
-                    <template slot-scope="{row}">
-                        <span class="blue text" @click="handleShowDetail(row)">{{row.originalQcBatchId}}</span>
-                    </template>
                 </el-table-column>
                 <el-table-column
                         prop="qcBatchName"
@@ -142,7 +140,7 @@
                 <el-table-column
                         prop="bussine"
                         label="质检业务"
-                        width="250px"
+                        width="300px"
                         align="center">
                 </el-table-column>
                 <el-table-column
@@ -158,7 +156,7 @@
                         align="center">
                 </el-table-column>
                 <el-table-column
-                        prop="finalUneligAmount"
+                        prop="uneligAmount"
                         label="不合格订单数"
                         width="120px"
                         align="center">
@@ -197,7 +195,7 @@
                         align="center">
                     <template slot-scope="{row}">
                         <span class="red" v-if="row.qcStatus==='未开始'" @click="handleDelete(row)">删除</span>
-                        <span class="blue text" v-else @click="handleShowResult(row)">质检结果</span>
+                        <span class="blue text"  v-if="row.qcStatus=='已完成-成功'||row.qcStatus=='已完成-失败'" @click="handleShowResult(row)">复检结果</span>
                     </template>
                 </el-table-column>
             </el-table>
@@ -205,11 +203,25 @@
             <pagination
                     :total="total"
                     :currentPage="currentPage"
-                    :currentPageSize="currentPageSize"
+                    :pageSize="pageSize"
                     @changeCurrentPageSize="handleChangeCurrentPageSize"
                     @changeCurrentPage="handleChangeCurrentPage">
             </pagination>
         </div>
+        <!-- 删除弹窗 -->
+        <el-dialog
+                :close-on-click-modal=false
+                :close-on-press-escape=false
+                title="提醒"
+                :visible.sync="deleteDialogVisible"
+                append-to-body
+                width="30%">
+            <span>是否确认删除该记录？</span>
+            <span slot="footer" class="dialog-footer">
+            <el-button @click="handleDeleteCancel">取 消</el-button>
+            <el-button type="primary" @click="handleDeleteConfirm">确 定</el-button>
+          </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -230,7 +242,7 @@
       return {
         loading:false,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         total:0,
         markType:'',
         qcName:'',
@@ -250,7 +262,10 @@
         tableData:[],
         batchStartTime:'',
         batchEndTime:'',
+        businTypeId:'',
         origQcBatchIdValue:'',
+        deleteDialogVisible:false,
+        deleteRow:{},
         qcStatusKey:null,
         qcStatus:[
           {
@@ -260,31 +275,37 @@
         ],
       }
     },
-    beforeRouteLeave(to, from, next) {
-      from.meta.keepAlive = false;
-      next();
+    // beforeRouteLeave(to, from, next) {
+    //   from.meta.keepAlive = false;
+    //   next();
+    // },
+    updated(){
+      let liList = document.getElementsByClassName('number')
+      if(liList.length>0){
+        for(let i=0;i<liList.length;i++){
+          liList[i].classList.remove('active')
+        }
+
+        liList[this.currentPage-1].classList.add('active')
+      }
     },
     mounted(){
       this.businessTypeValue = "所有"
       this.secondClassValue = "所有"
       this.thirdClassValue = "所有"
-      util.getBusin(this,'businessType','1',true)
-      util.getBatchInfo(this,'qcStatus')
+
+      let {params} = this.$route.params
+
+      if(params){
+        let keyList = Object.keys(params)
+        keyList.map(item=>{
+          this[item] = params[item]
+        })
+      }else{
+          util.getBusin(this,'businessType','1',true)
+          util.getBatchInfo(this,'qcStatus')
+      }
       this._getList(this.params)
-
-      let queryData = this.$route.params
-      let arr = Object.keys(queryData)
-      // if(arr.length != 0){
-      //   delete queryData.ids
-      //   this._getList(queryData)
-      // }else{
-      //   this.businessTypeValue = '所有'
-      //   this.secondClassValue = '所有'
-      //   this.thirdClassValue = '所有'
-      //   this.spotCheckValue = '所有'
-      //   this._getList(this.params)
-      // }
-
     },
     methods:{
       _getList(params){
@@ -292,14 +313,15 @@
         this.$http.post(SPOT_CHECK_CONVENTION_LIST,params).then(res=>{
           if (res.status === 200 && res.data.status === 0) {
             let { data } = res.data
-            util.formatBussine(data.items,'bussine')
-            this.tableData = data.items
-            this.total = data.totalNum
+            if(data){
+              util.formatBussine(data.items,'bussine')
+              this.tableData = data.items
+              this.total = data.totalNum
+            }
             this.loading = false
+          }else{
+            util.error(res.data.message)
           }
-        }).catch(err => {
-          util.error('服务器错误，请稍后再试')
-          console.log(err)
         })
       },
       _getQcStatus(){
@@ -310,7 +332,6 @@
           }
         }).catch(err => {
           util.error('服务器错误，请稍后再试')
-          console.log(err)
         })
       },
       _delete(qcBatchId){
@@ -324,13 +345,11 @@
           }else{
             util.error(data.message)
           }
-        }).catch(err=>{
-          util.err()
-          console.log(err)
         })
+        this.deleteDialogVisible = false
       },
       handleChangeCurrentPageSize(val){
-        this.currentPageSize = val;
+        this.pageSize = val;
         this.currentPage = 1
         this._getList(this.params)
         util.wrapToTop(this)
@@ -340,16 +359,56 @@
         this._getList(this.params)
         util.wrapToTop(this)
       },
-      handleInsert(){},
       handleShowDetail(row){
         let {originalQcBatchId} = row
+        let obj = {
+          currentPage:this.currentPage,
+          pageSize:this.pageSize,
+          businTypeId:this.businTypeId,
+          qcBatchIdValue:this.qcBatchIdValue,
+          batchStartTime:this.batchStartTime,
+          batchEndTime:this.batchEndTime,
+          qcStatusKey:this.qcStatusKey,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          qcStatusValue:this.qcStatusValue,
+          origQcBatchIdValue:this.origQcBatchIdValue,
+          qcBatchIdValue:this.qcBatchIdValue,
+          dateValue:this.dateValue,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          qcStatus:this.qcStatus,
+        }
         this.$router.push({name:'批次管理详情',params:{
-            id:originalQcBatchId
+            id:originalQcBatchId,
+            params:obj
           }})
       },
       handleShowResult(row){
         let {originalQcBatchId,qcBatchId} = row
-        this.$router.push({name:'复检详情',params:{qcBatchId,originalQcBatchId}})
+        let obj = {
+          currentPage:this.currentPage,
+          pageSize:this.pageSize,
+          businTypeId:this.businTypeId,
+          qcBatchIdValue:this.qcBatchIdValue,
+          batchStartTime:this.batchStartTime,
+          batchEndTime:this.batchEndTime,
+          qcStatusKey:this.qcStatusKey,
+          businessTypeValue:this.businessTypeValue,
+          secondClassValue:this.secondClassValue,
+          thirdClassValue:this.thirdClassValue,
+          qcStatusValue:this.qcStatusValue,
+          origQcBatchIdValue:this.origQcBatchIdValue,
+          qcBatchIdValue:this.qcBatchIdValue,
+          dateValue:this.dateValue,
+          businessType:this.businessType,
+          secondClass:this.secondClass,
+          thirdClass:this.thirdClass,
+          qcStatus:this.qcStatus,
+        }
+        this.$router.push({name:'复检详情',params:{originalQcBatchId,qcBatchId,isRecheckManage:false,isRecheckRecord:true,params:obj}})
       },
       handleTypeChange(val){
         this.businessTypeValue = val
@@ -373,7 +432,14 @@
         this.qcStatusKey = qcStatusKey
       },
       handleDelete(row){
-        let {qcBatchId} = row
+        this.deleteRow = row
+        this.deleteDialogVisible = true
+      },
+      handleDeleteCancel(){
+        this.deleteDialogVisible = false
+      },
+      handleDeleteConfirm(){
+        let {qcBatchId} = this.deleteRow
         this._delete(qcBatchId)
       }
     },
@@ -391,16 +457,18 @@
         }else{
           businTypeId = thirdClassId
         }
+        this.businTypeId = businTypeId
 
         return {
           currentPage:this.currentPage,
-          pageSize:this.currentPageSize,
-          businTypeId,
+          pageSize:this.pageSize,
+          businTypeId:this.businTypeId,
           qcBatchId:this.qcBatchIdValue.trim(),
           batchStartTime:this.batchStartTime,
           batchEndTime:this.batchEndTime,
           originalQcBatchId:this.origQcBatchIdValue.trim(),
-          qcStatus:this.qcStatusKey
+          qcStatus:this.qcStatusKey,
+          batchType: "3"
         }
       }
     },
@@ -508,22 +576,22 @@
                 white-space: nowrap;
             }
 
-            .blue{
-                color: @color-blue;
-                cursor: pointer;
-            }
-
             .red{
                 color: @color-red;
                 cursor: pointer;
             }
 
-            .text{
-                text-decoration: underline;
-            }
-
             .bold{
                 font-weight: 800;
+            }
+
+            .blue{
+                color: @color-blue;
+            }
+
+            .text{
+                text-decoration: underline;
+                cursor: pointer;
             }
         }
     }

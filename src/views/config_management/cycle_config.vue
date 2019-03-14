@@ -29,6 +29,7 @@
                         align="center">
                 </el-table-column>
                 <el-table-column
+                        v-if="isOptShow"
                         label="操作"
                         align="center">
                     <template scope="{row,$index}">
@@ -52,7 +53,7 @@
         <Pagination
                 :total="total"
                 :currentPage="currentPage"
-                :currentPageSize="currentPageSize"
+                :pageSize="pageSize"
                 @changeCurrentPageSize="handleChangeCurrentPageSize"
                 @changeCurrentPage="handleChangeCurrentPage">
         </Pagination>
@@ -128,7 +129,10 @@
   import URL from 'api/url'
   import util from 'tools/util'
   import {regularTransform,regularTransformToNum} from 'tools/transform'
+  import CONSTANT from 'api/constant'
+  import {mapState} from 'vuex'
   let {CYCLE_LIST,STANDARD_FIRSTCLASS,STANDARD_SECONDCLASS,CYCLE_CHANGEPERIOD,CYCLE_CHANGE_STATUS} = URL
+  let {CYCLE_CHANGE} = CONSTANT
   export default {
     name:'cycleConfig',
     components:{Pagination},
@@ -144,7 +148,7 @@
         loading:false,
         total:0,
         currentPage:1,
-        currentPageSize:20,
+        pageSize:20,
         businessTypeValue:'',
         businessTypeId:'',
         businessType:[],
@@ -153,6 +157,7 @@
         change_qcPeriodId:'',
         change_automaticFlag:'',
         change_row:{},
+        regularQcperiodText:'',
         options:[
           {regularQcperiod:1,regularQcperiodText:'日'},
           {regularQcperiod:2,regularQcperiodText:'周'},
@@ -164,7 +169,6 @@
     mounted(){
       this._getList()
       this.businessTypeValue = "所有"
-      util.getBusin(this,'businessType','1',true)
     },
     methods:{
       _getList(){
@@ -172,7 +176,7 @@
         let businessTypeId = this.businessTypeValue == "所有"?"":this.businessTypeId
         let obj = {
           currentPage:this.currentPage,
-          pageSize:this.currentPageSize,
+          pageSize:this.pageSize,
           businTypeId:businessTypeId
         }
 
@@ -216,6 +220,7 @@
             if(status){
               row.automaticFlag = automaticFlag
               row.isCheck = !row.isCheck
+              util.success('修改成功')
             }
           }else{
             util.error("修改失败")
@@ -225,6 +230,7 @@
       handleEdit(row,index){
         // regularQcperiodText
         let {regularQcperiodText} = row
+        this.regularQcperiodText = regularQcperiodText
         this.regularQcperiodValue = regularQcperiodText
         this.itemPeriod = row
         this.dialogVisible = true
@@ -232,7 +238,7 @@
         this.select_businTypeIdValue = id
       },
       handleChangeCurrentPageSize(val){
-        this.currentPageSize = val
+        this.pageSize = val
         this.currentPage = 1
         this._getList()
       },
@@ -241,6 +247,7 @@
         this._getList()
       },
       handleSearch(){
+        this.currentPage = 1
         this._getList()
       },
       handleTypeChange(val){
@@ -252,10 +259,14 @@
         this.regularQcperiodNum = val
       },
       handleConfirm(){
-        this.dialogVisible = false
-        regularTransformToNum(this.regularQcperiodValue,this)
-        this._changeRegularQcperiod(this.select_businTypeIdValue,this.regularQcperiodNum)
-        this._getList()
+        if(this.regularQcperiodText === this.regularQcperiodValue){
+            util.error('请勿选择相同的周期值')
+          }else{
+            regularTransformToNum(this.regularQcperiodValue,this)
+            this._changeRegularQcperiod(this.select_businTypeIdValue,this.regularQcperiodNum)
+            this.dialogVisible = false
+            this._getList()
+        }
       },
       handleChangeCancle(){
         this.changeDialogVisible = false
@@ -263,9 +274,19 @@
       handleChangeConfirm(){
         this._changeCheck(this.change_qcPeriodId,this.change_automaticFlag,this.change_row)
         this.changeDialogVisible = false
-        util.success('修改成功')
       }
     },
+    computed:{
+      ...mapState({
+        'authorityList':state=>state.user.authorityList
+      }),
+      isOptShow(){
+        if(this.authorityList.indexOf(CYCLE_CHANGE)>=0||this.authorityList.indexOf('ADMIN')>=0)
+          return true
+        else
+          return false
+      },
+    }
   }
 </script>
 

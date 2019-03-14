@@ -1,7 +1,9 @@
 import axios from 'src/axios.js'
 import URL from 'api/url'
 import util from 'tools/util'
-let { REFRESH_TOKEN } = URL
+let {
+  REFRESH_TOKEN
+} = URL
 export default {
   namespaced: true,
   state: {
@@ -25,13 +27,19 @@ export default {
     }
   },
   actions: {
-    refeshToken({ commit }) {
+    refeshToken({
+      commit
+    }) {
       axios.get(REFRESH_TOKEN).then(res => {
-        let { erpxerTime, token } = res.data.data
+        let {
+          erpxerTime,
+          token
+        } = res.data.data
         commit('setErpxerTime', erpxerTime)
         commit('setToken', token)
         let user = util.getSession()
-        util.setSession(user.userName, user.token, user.erpxerTime, user.authorityList)
+        sessionStorage.removeItem('user')
+        util.setSession(user.userName, token, erpxerTime, user.authorityList)
       })
     }
   }

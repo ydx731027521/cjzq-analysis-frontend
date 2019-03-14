@@ -52,6 +52,7 @@ export default {
       this.$store.commit('leftNav/setLeftNavList',this[dataName])
       this.$store.commit('topNav/setTopNavActive',index)
       this.$store.commit('breadCrumb/setFirstClass',value)
+      this.$store.commit('tree/setExpandId','')
       this.$router.push('/home')
     }
   },

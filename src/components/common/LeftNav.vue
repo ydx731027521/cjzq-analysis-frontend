@@ -59,7 +59,9 @@ export default {
         },
         handleClose(){
         },
-        handleSelect(){}
+        handleSelect(){
+            this.$store.commit('tree/setExpandId','')
+        }
     },
     computed:{
         ...mapState({

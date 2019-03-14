@@ -1,13 +1,13 @@
 <template>
   <div class="spot-check-convention">
     <div class="title">
-      <!-- <BusinTypeSearch :businTypeData='businessTypeData' :currentPage="currentPage" :currentPageSize="currentPageSize" :url="url" @getTableData="handleChangeTableData" @getList="handleChangeList" :tableData="tableData" @changeData="handleChangeData"></BusinTypeSearch> -->
+      <!-- <BusinTypeSearch :businTypeData='businessTypeData' :currentPage="currentPage" :pageSize="pageSize" :url="url" @getTableData="handleChangeTableData" @getList="handleChangeList" :tableData="tableData" @changeData="handleChangeData"></BusinTypeSearch> -->
       <div class="standard-box">
             <div class="standard-select">
-                <div class="iten-left">
+                <div class="item-left">
                   <span>业务类型：</span>
                 </div>
-                <div class="iten-right">
+                <div class="item-right">
                   <el-select v-model="businessTypeValue" size="small" @change="handleTypeChange">
                     <el-option
                             v-for="item in businessType"
@@ -20,10 +20,10 @@
                 </div>
             </div>
             <div class="first-class">
-              <div class="iten-left">
+              <div class="item-left">
                 <span>二级分类：</span>
               </div>
-                <div class="iten-right">
+                <div class="item-right">
                   <el-select v-model="secondClassValue" size="small"  @change="handleSecondClassChange">
                     <el-option
                             v-for="item in secondClass"
@@ -35,10 +35,10 @@
                 </div>
             </div>
             <div class="second-class">
-                <div class="iten-left">
+                <div class="item-left">
                   <span>三级分类：</span>
                 </div>
-                <div class="iten-right">
+                <div class="item-right">
                   <el-select v-model="thirdClassValue" size="small" @change="handleThirdClassChange">
                     <el-option
                             v-for="item in thirdClass"
@@ -53,10 +53,10 @@
                 <el-button type="primary" size="small" class="standard-search-btn" @click="handleSearch"><i class="el-icon-search"></i></el-button>
             </div>
             <div class="batch-type">
-              <div class="iten-left">
+              <div class="item-left">
                 <span>抽检类型：</span>
               </div>
-              <div class="iten-right">
+              <div class="item-right">
                 <el-select v-model="spotCheckValue" size="small" @change="handleCheckTypeChange">
                   <el-option
                           v-for="item in spotCheck"
@@ -68,10 +68,10 @@
               </div>
             </div>
             <div class="batch-status">
-              <div class="iten-left">
+              <div class="item-left">
                 <span>批次状态：</span>
               </div>
-              <div class="iten-right">
+              <div class="item-right">
                 <el-select v-model="spotCheckStatusValue" size="small" @change="handleStatusChange">
                   <el-option
                           v-for="item in spotCheckStatus"
@@ -83,18 +83,18 @@
               </div>
             </div>
             <div class="batch-id">
-              <div class="iten-left">
+              <div class="item-left">
                 <span>批次编号：</span>
               </div>
-              <div class="iten-right">
+              <div class="item-right">
                 <el-input size="small" v-model="batchId" clearable></el-input>
               </div>
             </div>
             <div class="batch-name">
-              <div class="iten-left">
+              <div class="item-left">
                 <span>抽检名称：</span>
               </div>
-              <div class="iten-right">
+              <div class="item-right">
                 <el-input size="small" v-model="batchName" clearable></el-input>
               </div>
             </div>
@@ -113,7 +113,7 @@
         </div>
     </div>
     <div class="opt">
-      <el-button type="primary" plain @click="handleInsert">
+      <el-button type="primary" plain @click="handleInsert" v-if="isInsertShow">
           <i class="el-icon-plus"></i>
           新增
       </el-button>
@@ -135,7 +135,7 @@
         <el-table-column
                 prop="spotType"
                 label="抽检类型"
-                width="150"
+                width="100"
                 fixed='left'
                 align="center">
         </el-table-column>
@@ -143,14 +143,14 @@
                 prop="qcBatchName"
                 label="批次名称"
                 fixed='left'
-                width="200"
+                width="220"
                 align="center">
         </el-table-column>
         <el-table-column
                 prop="qcStatus"
                 label="状态"
                 fixed='left'
-                width="150"
+                width="80"
                 align="center">
                 <template slot-scope="{row}">
                   <span class="unusual" v-if="row.qcStatus=='异常'">异常</span>
@@ -163,7 +163,7 @@
         <el-table-column
                 label="抽检业务"
                 fixed='left'
-                width="300"
+                width="350"
                 align="center">
                 <template slot-scope="{row}">
                     <span class="bussine" v-if="row.qcStatus==='已完成-失败'||row.qcStatus==='已完成-成功'" @click="handleShow(row)">{{row.bussine}}</span>
@@ -190,7 +190,7 @@
         </el-table-column>
         <el-table-column
                 label="批次编号"
-                width="220"
+                width="200"
                 align="center">
                 <template slot-scope="{row}">
                   <el-tooltip :content="row.qcBatchId" placement="top" effect="light">
@@ -203,7 +203,7 @@
                 align="center"
                 width="100">
           <template slot-scope="{row}">
-              <span class="red" v-if="row.batchType==='抽检批次'&&row.qcStatus === '未开始'" @click="handleDelete(row)">删除</span>
+              <span class="red" v-if="row.batchType==='抽检批次'&&row.qcStatus === '未开始'&&isInsertShow" @click="handleDelete(row)">删除</span>
               <span class="blue" v-if="row.qcStatus==='已完成-成功'||row.qcStatus==='已完成-失败'" @click="handleDeal(row)">抽检结果</span>
           </template>
         </el-table-column>
@@ -212,7 +212,7 @@
         <pagination
           :total="total"
           :currentPage="currentPage"
-          :currentPageSize="currentPageSize"
+          :pageSize="pageSize"
           @changeCurrentPageSize="handleChangeCurrentPageSize"
           @changeCurrentPage="handleChangeCurrentPage">
         </pagination>
@@ -304,14 +304,14 @@
               <div class="radio-item">
                 <el-radio v-model="i_radio" label="1">全量查</el-radio>
               </div>
-              <div class="radio-item">
+              <!-- <div class="radio-item">
                 <el-radio v-model="i_radio" label="2">随机查</el-radio>
-              </div>
+              </div> -->
               <div class="radio-item">
                 <el-radio v-model="i_radio" label="3">指定订单</el-radio>
               </div>
             </div>
-          </div>  
+          </div>
           <div class="random-check" v-if="i_radio === '2'">
             <div class="text">
               <span class="red">*</span>
@@ -402,7 +402,10 @@ import Pagination from 'components/common/Pagination'
 import util from 'tools/util'
 import URL from 'api/url.js'
 import {qcStatusTransToNum} from 'tools/transform'
-let {SPOT_CHECK_CONVENTION_LIST,SPOT_CHECK_INSERT_QCSTANDARD,SPOT_CHECK_INSERT,SPOT_CHECK_DELETE,SPOT_CHECK_CHECKTYPE,RECHECK_RECORD_RECHECKSTATUS} = URL
+import CONSTANT from 'api/constant'
+import {mapState} from 'vuex'
+let {SPOTCHECK_INSERT} = CONSTANT
+let {SPOT_CHECK_CONVENTION_LIST,SPOT_CHECK_INSERT_QCSTANDARD,SPOT_CHECK_INSERT,SPOT_CHECK_DELETE,SPOT_CHECK_CHECKTYPE} = URL
 export default {
   name:'spotCheckConvention',
   components:{
@@ -421,7 +424,7 @@ export default {
         }
       ],
       currentPage:1,
-      currentPageSize:20,
+      pageSize:20,
       total:0,
       businessType:[],
       secondClass:[],
@@ -438,7 +441,6 @@ export default {
       url:'',
       insertDialogVisible:false,
       deleteDialogVisible:false,
-      i_proportionValue:'10',
       i_proportionValue:'',
       i_insertTitleValue:'',
       i_businessTypeValue:'',
@@ -468,9 +470,11 @@ export default {
       spotCheck:[],
       checkDateValue:[],
       checkBeginDate:'',
-      checkEndDateL:'',
+      checkEndDate:'',
       isInsert:false,
       isDelete:{},
+      id:'',
+      businTypeId:''
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -483,11 +487,21 @@ export default {
     this.thirdClassValue = '所有'
     this.spotCheckValue = '所有'
     this.spotCheckStatusValue = '所有'
-    util.getBusin(this,'businessType','1',true)
+
+      let {params} = this.$route.params
+      if(params){
+        let keyList = Object.keys(params)
+        keyList.map(item=>{
+          this[item] = params[item]
+        })
+      }else{
+        util.getBusin(this,'businessType','1',true)
+        util.getBatchInfo(this,'spotCheckStatus')
+      }
+
     this._getList()
     this._getCheckType()
     this._initSpotCheck()
-    util.getBatchInfo(this,'spotCheckStatus')
   },
   methods:{
     _initSpotCheck(){
@@ -505,8 +519,6 @@ export default {
         }else{
           util.error(data.message)
         }
-      }).catch(err=>{
-        util.err()
       })
     },
     _getSelectData(){
@@ -517,11 +529,18 @@ export default {
     },
     _getList(){
       this.loading = true
-      let id = util.getBusinTypeId(this,'')
+      // if(!this.businTypeId){
+      //   var businTypeId = util.getBusinTypeId(this,'')
+      //   this.businTypeId = businTypeId
+      // }else{
+      //   this.businTypeId = this.businessTypeId
+      // }
+      // this.businessTypeId = this.businessTypeId?this.businessTypeId:util.getBusinTypeId(this,'')
+      this.id = util.getTypeId(this.businessTypeId,this.secondClassId,this.thirdClassId)
       this.$http.post(SPOT_CHECK_CONVENTION_LIST,{
         currentPage:this.currentPage,
-        pageSize:this.currentPageSize,
-        businTypeId:id,
+        pageSize:this.pageSize,
+        businTypeId:this.id,
         batchType:'4',
         spotType:this.spotCheckId,
         qcBatchId:this.batchId.trim(),
@@ -533,7 +552,7 @@ export default {
         if(res.status === 200 && res.data.status === 0){
           let {data} = res.data
           util.formatBussine(data.items,'bussine')
-          util.batchTimeTrans(data.items)
+          util.batchTimeTrans(data.items,'batchEndTime')
           util.orderTime(data.items)
           this.tableData = data.items
           this.total = data.totalNum
@@ -567,7 +586,7 @@ export default {
       if(this.i_insertTitleValue.length<=36){
         if(this.i_insertTitleValue&&this.i_businessTypeValue&&this.i_secondClassValue&&this.i_thirdClassValue&&this.i_qcStandardValue){
           if(this.i_radio==='1'){//全量查
-            if(this.i_dateValue.length>0) return true
+            if(this.i_dateValue&&this.i_dateValue.length>0) return true
             else util.error('请选择日期范围')
           }else if(this.i_radio === '2'){//随机查
             if(this.i_dateValue&&(this.i_dateValue.length>0)){
@@ -674,9 +693,6 @@ export default {
         }else{
           this.$refs.tip.innerText = data.message
         }
-      }).catch(err=>{
-        util.err()
-        console.log(err)
       })
     },
     _insert(){
@@ -713,9 +729,6 @@ export default {
             util.error(data.message)
           }
           this.isInsert = !this.isInsert
-        }).catch(err=>{
-          util.err()
-          console.log(err)
         })
       }
     },
@@ -726,14 +739,14 @@ export default {
           util.success(data.message)
           this._getList(data.message)
         }else{
-          util.err()
+          util.error(res.data.message)
         }
         this.deleteDialogVisible = false
       })
     },
     _getSplitStr(){
       let flag
-      if((this.i_textarea.indexOf(',')>0)||(this.i_textarea.indexOf('，')>0)){
+      if((this.i_textarea.indexOf(',')>=0)||(this.i_textarea.indexOf('，')>=0)){
         flag = true
       }else{
         flag = false
@@ -761,12 +774,12 @@ export default {
     },
     handleChangeCurrentPageSize(val){
       this.currentPage = 1
-      this.currentPageSize = val
+      this.pageSize = val
       this._getList()
     },
     handleCheckTypeChange(val){
-      this.spotCheckValue = val 
-      this.spotCheckId = this._getSlotType(this.spotCheckValue,this.spotCheck)           
+      this.spotCheckValue = val
+      this.spotCheckId = this._getSlotType(this.spotCheckValue,this.spotCheck)
     },
     handleChangeList(){
       this._getList()
@@ -795,7 +808,7 @@ export default {
       util.secondClassChange(this, this.secondClassValue, val,true)
     },
     handleThirdClassChange(val){
-      this.thirdClassValue = val 
+      this.thirdClassValue = val
       util.thirdClassChange(this, this.thirdClassValue, val)
     },
     i_handleTypeChange(val){
@@ -810,7 +823,7 @@ export default {
     },
     i_handleThirdClassChange(val){
       this._clearQcStandard()
-      this.i_thirdClassValue = val 
+      this.i_thirdClassValue = val
       util.i_thirdClassChange(this, this.i_thirdClassValue, val)
       this._getQcStandard()
     },
@@ -822,17 +835,71 @@ export default {
     },
     handleDeal(row){
       let {qcBatchId} = row
+      let obj ={
+        currentPage:this.currentPage,
+        pageSize:this.pageSize,
+        businessTypeId:this.businessTypeId,
+        secondeClassId:this.secondeClassId,
+        thirdClassId:this.thirdClassId,
+        batchType:'4',
+        spotType:this.spotCheckId,
+        qcBatchId:this.batchId.trim(),
+        qcBatchName:this.batchName.trim(),
+        batchStartTime:this.checkBeginDate,
+        batchEndTime:this.checkEndDate,
+        qcStatus:this.spotCheckStatusId,
+        businessTypeValue:this.businessTypeValue,
+        secondClassValue:this.secondClassValue,
+        thirdClassValue:this.thirdClassValue,
+        businessType:this.businessType,
+        secondClass:this.secondClass,
+        thirdClass:this.thirdClass,
+        spotCheck:this.spotCheck,
+        spotCheckValue:this.spotCheckValue,
+        spotCheckStatusValue:this.spotCheckStatusValue,
+        spotCheckStatus:this.spotCheckStatus,
+        total:this.total,
+        id:this.id
+      }
       this.$router.push({name:'抽检详情',params:{
-          id:qcBatchId
+          id:qcBatchId,
+          params:obj
       }})
     },
     handleSearch(){
       this.currentPage = 1
+      if(this)
       this._getList()
     },
     handleShow(row){
       let {qcBatchId} = row
-      this.$router.push({name:'抽检详情',params:{id:qcBatchId}})
+      let obj ={
+        currentPage:this.currentPage,
+        pageSize:this.pageSize,
+        businessTypeId:this.businessTypeId,
+        secondeClassId:this.secondeClassId,
+        thirdClassId:this.thirdClassId,
+        batchType:'4',
+        spotType:this.spotCheckId,
+        qcBatchId:this.batchId.trim(),
+        qcBatchName:this.batchName.trim(),
+        batchStartTime:this.checkBeginDate,
+        batchEndTime:this.checkEndDate,
+        qcStatus:this.spotCheckStatusId,
+        businessTypeValue:this.businessTypeValue,
+        secondClassValue:this.secondClassValue,
+        thirdClassValue:this.thirdClassValue,
+        businessType:this.businessType,
+        secondClass:this.secondClass,
+        thirdClass:this.thirdClass,
+        spotCheck:this.spotCheck,
+        spotCheckValue:this.spotCheckValue,
+        spotCheckStatusValue:this.spotCheckStatusValue,
+        spotCheckStatus:this.spotCheckStatus,
+        total:this.total,
+        id:this.id
+      }
+      this.$router.push({name:'抽检详情',params:{id:qcBatchId,params:obj}})
     },
     handleStatusChange(val){
       this.spotCheckStatusValue = val
@@ -858,7 +925,16 @@ export default {
         number = 200
       }
       return number
-    }
+    },
+    ...mapState({
+      'authorityList':state=>state.user.authorityList
+    }),
+    isInsertShow(){
+      if(this.authorityList.indexOf(SPOTCHECK_INSERT)>=0||this.authorityList.indexOf('ADMIN')>=0)
+        return true
+      else
+        return false
+    },
   },
   watch:{
     i_dateValue(val,oldval){
@@ -911,17 +987,17 @@ export default {
             display: flex;
 
             .item-left{
-              flex: 120px 0;
+              width: 80px;
               text-align: right;
             }
-        
+
             .item-right{
               flex:1;
-        
+
               .el-select.el-select--small{
                 width: 90%;
               }
-        
+
               .el-input.el-input--small{
                   width: 90%;
               }
@@ -996,7 +1072,7 @@ export default {
       color: @color-unusual;
       font-weight: 700;
     }
-    
+
     .batchId-box{
       width: 100%;
       overflow: hidden;

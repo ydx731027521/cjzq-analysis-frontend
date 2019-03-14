@@ -5,12 +5,12 @@
             <img src="../../static/logo.png" alt="">
         </div>
         <ul class="header-nav">
-            <li v-for="(item,index) in topNav" :key="item.text" :class="activeIndex === index?'active':''" @click="handleActiveChange(index,item.dataName,item.text)">{{item.text}}</li>
+            <li v-for="(item,index) in topNav" :key="item.text" :class="activeIndex === index?'active':''" @click="handleActiveChange(index,item.dataName,item.text,item.path)">{{item.text}}</li>
         </ul>
         <div class="user">
             <span class="username-box"><span>欢迎登录，</span><span class="username" ref="username"></span></span>
             <div class="avatar">
-                <img src="http://tx.haiqq.com/uploads/allimg/170509/021J44Y9-6.jpg" alt="">
+                <img src="../../assets/admin.jpg" alt="">
             </div>
             <el-dropdown @command="handleCommand">
                 <span class="el-dropdown-link">
@@ -61,17 +61,17 @@
       }
     },
     methods:{
-      handleActiveChange(index,dataName,value){
+      handleActiveChange(index,dataName,value,path){
         util.setLeftNav(this.list[index])
         util.setActiveIndex(index)
         this.$store.commit('topNav/setActiveIndex',index)
         this.$store.commit('leftNav/setLeftActiveList',this.list[index])
         this.$store.commit('breadCrumb/setFirstClass',value)
-        this.$router.push({name:value})
+        this.$store.commit('tree/setExpandId','')
+        this.$router.push({path:path})
       },
       handleCommand(val){
         if(val == "logout"){
-          sessionStorage.removeItem("user")
           this.$store.commit('user/setUserName',"")
           this.$store.commit('user/setToken',"")
           this.$store.commit('user/setErpxerTime',"")
@@ -79,9 +79,12 @@
           this.$store.commit('topNav/setActiveIndex',0)
           this.$store.commit('leftNav/setLeftActiveList',[])
           this.$store.commit('leftNav/setList',[])
+          this.$store.commit('tree/setExpandId','')
+          sessionStorage.removeItem("user")
           sessionStorage.removeItem('leftNav')
           sessionStorage.removeItem('activeIndex')
           sessionStorage.removeItem('routes')
+          sessionStorage.removeItem('path')
           this.$router.push({name:'login'})
         }
       }

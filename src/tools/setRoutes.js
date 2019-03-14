@@ -1,7 +1,10 @@
-
 import router from '../router'
-import { constantRouterMap } from '../router/router'
-import { store } from '../store/index'
+import {
+  constantRouterMap
+} from '../router/router'
+import {
+  store
+} from '../store/index'
 /**
  * 通过meta.roles判断是否与当前用户权限匹配
  * @param roles
@@ -16,21 +19,34 @@ function hasPermission(roles, route) {
   }
 }
 
+
+
 /**
  * 递归过滤异步路由表，返回符合用户角色权限的路由表
- * @param asyncRouterMap
+ * @param routerMap
  * @param roles
  */
 export const filterRouter = function (routerMap, roles) {
-  const accessedRouters = routerMap.filter(route => {
+
+  let accessedRouters = routerMap.filter(route => {
     if (hasPermission(roles, route)) {
       if (route.children && route.children.length) {
         route.children = filterRouter(route.children, roles)
       }
       return true
+    } else {
+      return false
     }
-    return false
   })
+
+  if (accessedRouters[1] && accessedRouters[1].children) {
+    accessedRouters[1].children.map(item => {
+      if (item.children && item.children.length > 0) {
+        item.redirect = '/' + item.path + '/' + item.children[0].path
+      }
+    })
+  }
+  // console.log('accessedRouters', accessedRouters)
   return accessedRouters
 }
 
@@ -43,6 +59,7 @@ export const setTopNav = function (arr) {
     let obj = {}
     obj.text = item.name
     obj.dataName = item.meta
+    obj.path = item.redirect
     headerNavList.push(obj)
   })
   return headerNavList
@@ -83,7 +100,9 @@ export const setLeftNav = function (arr) {
 
 export const setRoutes = function () {
   let user = JSON.parse(sessionStorage.getItem('user'))
-  let { authorityList } = user
+  let {
+    authorityList
+  } = user
   let routes = filterRouter(constantRouterMap, authorityList)
   router.addRoutes(routes)
   let headerNavList = setTopNav(routes)
